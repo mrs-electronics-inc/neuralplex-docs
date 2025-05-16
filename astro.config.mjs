@@ -47,7 +47,7 @@ export default defineConfig({
 					autogenerate: { directory: 'other' },
 				},
 			],
-			favicon: "/public/favicon.ico",
+			favicon: "./src/assets/favicon.ico",
 		}),
 	],
 	image: {
