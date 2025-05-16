@@ -1,0 +1,39 @@
+---
+title: Serializer/Deserializer (SerDes)
+sidebar:
+  order: 4
+---
+
+NeuralPlex utilizes Serializer/Deserializer (SerDes) technology for its external displays, which is qualified for automotive applications.  There are two types of Serializers used: OpenLDI (`TI DS90UB947-Q1`), and MIPI-DSI (`TI DS90UB941AS-Q1`).
+
+### Serializer
+The `DS90UB947-Q1` is an OpenLDI to FPD-Link III bridge device which, in conjunction with the FPD-Link III `DS90UB948-Q1` deserializers,provides 1-lane or 2-lane high-speed serial streams over cost-effective 50-Ω single-ended coaxial or 100-Ω differential shielded twisted-pair (STP) cables. It serializes an OpenLDI input supporting video
+resolutions up to WUXGA and 1080p60 with 24-bit color depth.
+
+The `DS90UB941AS-Q1` is a dual DSI to FPD-Link III bridge serializer designed for automotive infotainment applications. When paired with an FPD-Link III `DS90UB948-Q1` deserializer, the `DS90UB941AS-Q1` can supply 1- or 2-lane highspeed serial streams.  In response to the rise in number and variance of displays in infotainment systems, the
+DS90UB941AS-Q1 can support symmetric and asymmetric splitting.
+
+The FPD-Link III interface supports video transmission and full duplex control, including I2C communication, over the same
+differential link. Consolidation of video data and control over two differential pairs reduces the interconnect size and weight and simplifies system design. EMI is minimized by the use of low voltage differential signaling, data scrambling, and randomization. In backward compatible mode, the device supports up to WXGA and 720p resolutions with 24-bit color depth over a single differential link.
+
+Interacting with the serializer is done by modifying its I2C registers.  Some common registers are listed below:
+```bash title="Serializer GPIO Configuration"
+# PWM GPIO Input
+i2cset -f -y 6 0x16 0x0e 0x30
+
+# TOUCH_INTERRUPT Enable
+i2cset -f -y 6 0x16 0xc6 0x21
+```
+
+### Deserializer
+Each external display for NeuralPlex includes a `DS90UB948-Q1` deserializer which decodes the video and I2C signals, allowing touch events, physical buttons, brightness control, etc. to communicate with the serializer.  Interacting with the deserializer is done by modifying its I2C registers.  Some common registers are listed below:
+```bash title="Deserializer GPIO Configuration"
+# LED_EN GPIO and TS_RESET GPIO
+i2cset -f -y 6 0x2c 0x20 0x99    // Set GPIO5 and GPIO6 as Outputs
+
+# GPIO_2 Output (DISP_PWM)
+i2cset -f -y 6 0x2c 0x1e 0x50
+
+# GPIO_7 Output (DISP_nRST) (for 15.6" screen only)
+i2cset -f -y 8 0x2c 0x21 0x09
+```

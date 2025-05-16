@@ -1,0 +1,23 @@
+---
+title: CPU Temperature
+sidebar:
+  order: 6
+---
+
+### Reading the SOC Temperature
+The NXP i.MX8QM SOC has an internal temperature sensor that can be read. The temperature is reported in millidegrees Celsius:
+```bash title="SOC Thermal Zones"
+root@neuralplex:~# cat /sys/class/thermal/thermal_zone0/temp                                                                          
+43000
+```
+
+### Thermal Setpoints
+The Linux kernel will throttle the CPU and GPU based on setpoints configured in the Linux device tree.
+
+The following demonstrates how to read the setpoints for the NeuralPlex:
+```bash title="SOC Temperatures"
+root@neuralplex:~# cat /sys/class/thermal/thermal_zone0/trip_point_0_temp
+110000
+root@neuralplex:~# cat /sys/class/thermal/thermal_zone0/trip_point_1_temp
+125000
+```
