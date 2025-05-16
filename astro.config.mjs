@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { targetBlank } from "./src/plugins/targetBlank";
 
 // https://astro.build/config
 export default defineConfig({
@@ -9,7 +10,7 @@ export default defineConfig({
 	outDir: "public",
 	publicDir: "static",
 	markdown: {
-		rehypePlugins: [],
+		rehypePlugins: [[targetBlank, {}]],
 	},
 	integrations: [
 		starlight({
@@ -47,7 +48,7 @@ export default defineConfig({
 					autogenerate: { directory: 'other' },
 				},
 			],
-			favicon: "./src/assets/favicon.ico",
+			favicon: "/favicon.ico",
 		}),
 	],
 	image: {
