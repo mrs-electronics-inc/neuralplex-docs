@@ -37,3 +37,249 @@ i2cset -f -y 6 0x2c 0x1e 0x50
 # GPIO_7 Output (DISP_nRST) (for 15.6" screen only)
 i2cset -f -y 8 0x2c 0x21 0x09
 ```
+
+### Debugging
+#### Deserialzier Pattern Generation
+There are times where it is useful to test the FPD-Link connection of external screen without the NeuralPlex sending video signals.  The `DS90UB948-Q1` allows pattern generation for this purpose.
+
+```bash title="Pattern Generation"
+\#!/bin/bash
+set -e
+
+WriteI2C () {                            
+    i2cset -y -f -r $i2cBus $1 $2 $3        
+}
+
+i2cBus=8
+serAddr=0x16
+deserAddr=0x2c
+PGIA=0x66
+PGID=0x67
+
+## *********************************************
+## PATGEN configurations for 1920x1080p@60
+## *********************************************
+PGRS=0x00
+PGGS=0x00
+PGBS=0x00
+PGCDC1=0x02 #divide by 2
+PGTFS1=0x00
+PGTFS2=0x08
+PGTFS3=0x4b
+PGAFS1=0x80
+PGAFS2=0x87
+PGAFS3=0x43
+PGHSW=0x20
+PGVSW=0x08
+PGHBP=0x20
+PGVBP=0x08
+PBSC=0x00
+PGFT=0x1e
+PGTSC=0x0c
+PGTS01=0x21
+PGTS02=0x43
+PGTS03=0x65
+PGTS04=0x87
+PGTS05=0xa9
+PGTS06=0xcb
+PGTS07=0xed
+PGTS08=0x0f
+PGBE=0x00
+PGCDC2=0x01 #multiply by 1
+
+# Disable DSI on Serializer             
+WriteI2C $serAddr 0x01 0x08
+
+# Enable I2C passthrough
+WriteI2C $serAddr 0x3 0x9A
+
+sleep 1
+
+WriteI2C $deserAddr $PGIA 0x00
+WriteI2C $deserAddr $PGID $PGRS #PGRS
+WriteI2C $deserAddr $PGIA 0x01
+WriteI2C $deserAddr $PGID $PGGS #PGGS
+WriteI2C $deserAddr $PGIA 0x02
+WriteI2C $deserAddr $PGID $PGBS #PGBS
+WriteI2C $deserAddr $PGIA 0x03
+WriteI2C $deserAddr $PGID $PGCDC1 #PGCDC1
+WriteI2C $deserAddr $PGIA 0x04
+WriteI2C $deserAddr $PGID $PGTFS1 #PGTFS1
+WriteI2C $deserAddr $PGIA 0x05
+WriteI2C $deserAddr $PGID $PGTFS2 #PGTFS2
+WriteI2C $deserAddr $PGIA 0x06
+WriteI2C $deserAddr $PGID $PGTFS3 #PGTFS3
+WriteI2C $deserAddr $PGIA 0x07
+WriteI2C $deserAddr $PGID $PGAFS1 #PGAFS1
+WriteI2C $deserAddr $PGIA 0x08
+WriteI2C $deserAddr $PGID $PGAFS2 #PGAFS2
+WriteI2C $deserAddr $PGIA 0x09
+WriteI2C $deserAddr $PGID $PGAFS3 #PGAFS3
+WriteI2C $deserAddr $PGIA 0x0a
+WriteI2C $deserAddr $PGID $PGHSW #PGHSW
+WriteI2C $deserAddr $PGIA 0x0b
+WriteI2C $deserAddr $PGID $PGVSW #PGVSW
+WriteI2C $deserAddr $PGIA 0x0c
+WriteI2C $deserAddr $PGID $PGHBP #PGHBP
+WriteI2C $deserAddr $PGIA 0x0d
+WriteI2C $deserAddr $PGID $PGVBP #PGVBP
+WriteI2C $deserAddr $PGIA 0x0e
+WriteI2C $deserAddr $PGID $PBSC #PBSC, if not working try both positive AND negative polarity
+WriteI2C $deserAddr $PGIA 0x0f
+WriteI2C $deserAddr $PGID $PGFT #PGFT
+WriteI2C $deserAddr $PGIA 0x10
+WriteI2C $deserAddr $PGID $PGTSC #PGTSC
+WriteI2C $deserAddr $PGIA 0x11
+WriteI2C $deserAddr $PGID $PGTS01 #PGTS01
+WriteI2C $deserAddr $PGIA 0x12
+WriteI2C $deserAddr $PGID $PGTS02 #PGTS02
+WriteI2C $deserAddr $PGIA 0x13
+WriteI2C $deserAddr $PGID $PGTS03 #PGTS03
+WriteI2C $deserAddr $PGIA 0x14
+WriteI2C $deserAddr $PGID $PGTS04 #PGTS04
+WriteI2C $deserAddr $PGIA 0x15
+WriteI2C $deserAddr $PGID $PGTS05 #PGTS05
+WriteI2C $deserAddr $PGIA 0x16
+WriteI2C $deserAddr $PGID $PGTS06 #PGTS06
+WriteI2C $deserAddr $PGIA 0x17
+WriteI2C $deserAddr $PGID $PGTS07 #PGTS07
+WriteI2C $deserAddr $PGIA 0x18
+WriteI2C $deserAddr $PGID $PGTS08 #PGTS08
+WriteI2C $deserAddr $PGIA 0x19
+WriteI2C $deserAddr $PGID $PGBE #PGBE
+WriteI2C $deserAddr $PGIA 0x1a
+WriteI2C $deserAddr $PGID $PGCDC2 #PGCDC2
+
+# Turn on backlight and PWM                          
+WriteI2C $deserAddr 0x21 0x09                               
+WriteI2C $deserAddr 0x1e 0x50
+WriteI2C $deserAddr 0x20 0x99
+
+echo "Enabling DES PATGEN"
+WriteI2C $deserAddr 0x65 0x04
+WriteI2C $deserAddr 0x64 0x05
+```
+
+#### Serialzier Pattern Generation
+The `DS90UB941-Q1` Serializer also allows pattern generation to test the FPD-Link connection between the Serializer and Deserializer.
+
+```bash title="Pattern Generation"
+\#!/bin/bash
+
+set -e
+
+WriteI2C () {                            
+    i2cset -y -f -r $i2cBus $1 $2 $3        
+}
+
+i2cBus=8
+serAddr=0x16
+deserAddr=0x2c
+PGIA=0x66
+PGID=0x67
+
+# Disable DSI
+WriteI2C $serAddr 0x01 0x08
+
+## *********************************************
+## PATGEN configurations for 1920x1080p@60
+## *********************************************
+PGRS=0x00
+PGGS=0x00
+PGBS=0x00
+PGCDC1=0x03 #divide by 3
+PGTFS1=0x00
+PGTFS2=0x08
+PGTFS3=0x4b
+PGAFS1=0x80
+PGAFS2=0x87
+PGAFS3=0x43
+PGHSW=0x20
+PGVSW=0x08
+PGHBP=0x20
+PGVBP=0x08
+PBSC=0x00
+PGFT=0x1e
+PGTSC=0x0c
+PGTS01=0x21
+PGTS02=0x43
+PGTS03=0x65
+PGTS04=0x87
+PGTS05=0xa9
+PGTS06=0xcb
+PGTS07=0xed
+PGTS08=0x0f
+PGBE=0x00
+PGCDC2=0x01 #multiply by 1
+
+# Enable I2C passthrough
+WriteI2C $serAddr 0x3 0x9A
+
+sleep 1
+
+WriteI2C $serAddr 0x01 0x02
+
+WriteI2C $serAddr $PGIA 0x00
+WriteI2C $serAddr $PGID $PGRS #PGRS
+WriteI2C $serAddr $PGIA 0x01
+WriteI2C $serAddr $PGID $PGGS #PGGS
+WriteI2C $serAddr $PGIA 0x02
+WriteI2C $serAddr $PGID $PGBS #PGBS
+WriteI2C $serAddr $PGIA 0x03
+WriteI2C $serAddr $PGID $PGCDC1 #PGCDC1
+WriteI2C $serAddr $PGIA 0x04
+WriteI2C $serAddr $PGID $PGTFS1 #PGTFS1
+WriteI2C $serAddr $PGIA 0x05
+WriteI2C $serAddr $PGID $PGTFS2 #PGTFS2
+WriteI2C $serAddr $PGIA 0x06
+WriteI2C $serAddr $PGID $PGTFS3 #PGTFS3
+WriteI2C $serAddr $PGIA 0x07
+WriteI2C $serAddr $PGID $PGAFS1 #PGAFS1
+WriteI2C $serAddr $PGIA 0x08
+WriteI2C $serAddr $PGID $PGAFS2 #PGAFS2
+WriteI2C $serAddr $PGIA 0x09
+WriteI2C $serAddr $PGID $PGAFS3 #PGAFS3
+WriteI2C $serAddr $PGIA 0x0a
+WriteI2C $serAddr $PGID $PGHSW #PGHSW
+WriteI2C $serAddr $PGIA 0x0b
+WriteI2C $serAddr $PGID $PGVSW #PGVSW
+WriteI2C $serAddr $PGIA 0x0c
+WriteI2C $serAddr $PGID $PGHBP #PGHBP
+WriteI2C $serAddr $PGIA 0x0d
+WriteI2C $serAddr $PGID $PGVBP #PGVBP
+WriteI2C $serAddr $PGIA 0x0e
+WriteI2C $serAddr $PGID $PBSC #PBSC, if not working try both positive AND negative polarity
+WriteI2C $serAddr $PGIA 0x0f
+WriteI2C $serAddr $PGID $PGFT #PGFT
+WriteI2C $serAddr $PGIA 0x10
+WriteI2C $serAddr $PGID $PGTSC #PGTSC
+WriteI2C $serAddr $PGIA 0x11
+WriteI2C $serAddr $PGID $PGTS01 #PGTS01
+WriteI2C $serAddr $PGIA 0x12
+WriteI2C $serAddr $PGID $PGTS02 #PGTS02
+WriteI2C $serAddr $PGIA 0x13
+WriteI2C $serAddr $PGID $PGTS03 #PGTS03
+WriteI2C $serAddr $PGIA 0x14
+WriteI2C $serAddr $PGID $PGTS04 #PGTS04
+WriteI2C $serAddr $PGIA 0x15
+WriteI2C $serAddr $PGID $PGTS05 #PGTS05
+WriteI2C $serAddr $PGIA 0x16
+WriteI2C $serAddr $PGID $PGTS06 #PGTS06
+WriteI2C $serAddr $PGIA 0x17
+WriteI2C $serAddr $PGID $PGTS07 #PGTS07
+WriteI2C $serAddr $PGIA 0x18
+WriteI2C $serAddr $PGID $PGTS08 #PGTS08
+WriteI2C $serAddr $PGIA 0x19
+WriteI2C $serAddr $PGID $PGBE #PGBE
+WriteI2C $serAddr $PGIA 0x1a
+WriteI2C $serAddr $PGID $PGCDC2 #PGCDC2
+
+# Turn on backlight and PWM                          
+WriteI2C $deserAddr 0x21 0x09                               
+WriteI2C $deserAddr 0x1e 0x50
+WriteI2C $deserAddr 0x20 0x99
+
+echo "Enabling SER PATGEN"
+WriteI2C $serAddr 0x65 0x04
+WriteI2C $serAddr 0x64 0x05
+```

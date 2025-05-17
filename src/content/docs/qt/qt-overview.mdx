@@ -29,12 +29,12 @@ Internationalization:
 
 
 ## Qt Core
-Qt provides functionality on top of C++, which makes day-to-day tasks relatively easier. A few of the core concepts in QT are as follows:
+Qt provides functionality on top of C++, which makes day-to-day tasks relatively easier. A few of the core concepts in Qt are as follows:
 
 ### Object
-The backbone of the QT framework is the QObject class. It's crucial because it includes key features like Q_SIGNALS, Q_SLOTS, Q_INVOKABLE, and Q_PROPERTY. To use these specific QT functionalities, a class needs to inherit from the QObject class using the public access specifier and include the "Q_OBJECT" macro at the start of the class body. This adds an extra step before the C++ compilation, known as meta-object compilation.
+The backbone of the Qt framework is the QObject class. It's crucial because it includes key features like Q_SIGNALS, Q_SLOTS, Q_INVOKABLE, and Q_PROPERTY. To use these specific Qt functionalities, a class needs to inherit from the QObject class using the public access specifier and include the "Q_OBJECT" macro at the start of the class body. This adds an extra step before the C++ compilation, known as meta-object compilation.
 
-During this step, the moc tool looks at code with QObject inheritance and the Q_OBJECT macro, adding extra C++ code for Q_SIGNALS , Q_SLOTS, Q_PROPERTY, and more. So, if you want to use QT-specific features, ensure your class includes QObject in its inheritance.
+During this step, the moc tool looks at code with QObject inheritance and the Q_OBJECT macro, adding extra C++ code for Q_SIGNALS , Q_SLOTS, Q_PROPERTY, and more. So, if you want to use Qt-specific features, ensure your class includes QObject in its inheritance.
 
 ```cpp
 // MyQtClass.hpp
@@ -59,7 +59,7 @@ QObject* child = new QObject(parent); // Creating a child object with 'parent'
 delete parent; // Automatically deletes 'child' as well
 ```
 
-Default main.cpp of QT Application
+Default main.cpp of Qt Application
 ```cpp
 // main.cpp
 #include <QGuiApplication>
@@ -389,7 +389,7 @@ MyClass {
 myObject.someFunction();
 ```
 
-## QT Quick Application
+## Qt Quick Application
 QML is a declarative language that describes user interfaces in terms of their visual components and how they interact and relate to one another. It is a highly human-readable language designed to enable components to be interconnected dynamically and allow components to be easily reused and customized within a user interface. Using the QtQuick module, designers and developers can easily build fluid animated user interfaces in QML and have the option of connecting these user interfaces to back-end C++ logic.
 
 ### Syntax
@@ -509,7 +509,7 @@ The MouseArea element in QML handles mouse events for a designated region within
 - enabled: Controls whether the MouseArea responds to user input.
 - drag.target: Specifies an item to be moved or dragged when the user interacts with the MouseArea.
 
-For further details about MouseArea, consult the official QT documentation.
+For further details about MouseArea, consult the official Qt documentation.
 
 Example QML:
 ```qml
