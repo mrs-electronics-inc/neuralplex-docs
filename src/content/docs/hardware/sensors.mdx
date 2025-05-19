@@ -4,4 +4,64 @@ sidebar:
   order: 2
 ---
 
+The NeuralPlex has several sensors that can be interfaced with your software application.
+
+### 6-axis IMU (Accelerometer + Gyroscope)
+The LSM6DS1 IMU is internal to the  NeuralPlex. It is a 6DOF chip and comes with the following:
+
+- 3D digital linear acceleration sensors
+- 3D digital angular rate sensors
+
+It uses the I2C serial bus interface to communicate with the SOC. In the Qt application, the RTIMULib is used to communicate with the device. The library requires a settings file to run properly. This file includes general IMU settings and those related to the IMU chip (LSM6DS1) in use.
+
+The library contains a calibration document with calibration values, which can be used to remove IMU soft and hard iron disturbances.
+
+The C++ implementation of RTIMULib in the Reference App is as follows:
+
+```cpp
+// Sensors.cpp
+RTIMUSettings *settings = new RTIMUSettings("RTIMULib");
+RTIMU *imu = RTIMU::createIMU(settings);
+
+imu->IMUInit();
+imu->setSleepPower(0.02);
+imu->setGyroEnable(true);
+imu->setAccelEnable(true);
+imu->setCompassEnable(true);
+
+while (imu->IMURead()) 
+{
+    RTIMU_DATA imuData = imu->getIMUData();
+}
+```
+
+#### Reading IMU from userspace
+It is also possible to read the IMU data from userspace using the following commands below:
+
+```bash title="Read IMU data from userspace"
+root@neuralplex:~# cat /sys/bus/iio/devices/iio\:device1/in_accel_x_raw
+
+# Read other x,y,z values as required
+```
+
+### Real-Time Clock
+The NeuralPlex has two integrated RTCs.  One RTC is intergrated into the PMIC (rtc0), and the other is a secondary, low-power RTC (rtc1).  The RTC keeps track of the current time when the NeuralPlex is not powered on and re-syncs with the Linux OS when power is restored.
+
+To set up the RTC, enter the following commands in the terminal:
+
+```bash title="Set date/time on RTC"
+root@neuralplex:~# date -s "2025-05-16 21:00:00" &  hwclock -f /dev/rtc1 -w
+```
+
+#### Wake on RTC
+If your application requires wake on RTC, you must utilize the RTC integrated into the PMIC (rtc0)
+
+```bash title="Wake on RTC"
+# wake from RTC in 30 seconds
+root@neuralplex:~# echo +30 > /sys/class/rtc/rtc0/wakealarm
+root@neuralplex:~# echo deep > /sys/power/mem_sleep
+root@neuralplex:~# echo mem > /sys/power/state
+```
+
+### Board Temperature and Barometric Pressure Sensor
 TODO
