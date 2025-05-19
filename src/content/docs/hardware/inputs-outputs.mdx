@@ -4,7 +4,7 @@ sidebar:
   order: 1
 ---
 
-The NeuralPlex has a separate Vehicl Interface Processor (VIP) that is responsible for all analog inputs, PWM outputs, VRef, RS232/485, and LIN.  It also shares three of the four CAN buses with the SOC, allowing it to send/recieve CAN messages during the early boot process.  The VIP interfaces with the SOC via a high speed SPI bus, and is used by the SOC to configure the baud rate of each CAN bus to ensure the VIP and SOC do not have conflicting baud rates.  The SPI bus is configured as show below.
+The NeuralPlex has a separate Vehicle Interface Processor (VIP) that is responsible for all analog inputs, PWM outputs, VRef, RS232/485, and LIN.  It also shares three of the four CAN buses with the SOC, allowing it to send/recieve CAN messages during the early boot process.  The VIP interfaces with the SOC via a high speed SPI bus, and is used by the SOC to configure the baud rate of each CAN bus to ensure the VIP and SOC do not have conflicting baud rates.  The SPI bus is configured as show below.
 
 ### Bus Settings
 - MSB first
