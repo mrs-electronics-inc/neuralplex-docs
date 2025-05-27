@@ -36,7 +36,7 @@ The NeuralPlex has a separate Vehicle Interface Processor (VIP) that is responsi
 ```
 
 ### Messages
-Individual messages are outlined in the protocol below.  The ID represents the OP Code, Byte 0 represents MSB. Message with ID of 0x1XY represents the response message sent back to the SOC (master) one frame after receiving 0xXY.  A full frame of 0's serves as a NOP to allow the SOC to receive a response without sending more data to the VIP. Response to NOP will also be a frame consisting entirely of 0's.
+Individual messages are outlined in the protocol below.  The ID represents the OP Code, Byte 0 represents MSB. Message with ID of `0x1XY` represents the response message sent back to the SOC (master) one frame after receiving `0xXY`.  A full frame of 0's serves as a NOP to allow the SOC to receive a response without sending more data to the VIP. Response to NOP will also be a frame consisting entirely of 0's.
 
 ### SPI Protocol
 

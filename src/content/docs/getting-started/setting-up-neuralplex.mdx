@@ -33,7 +33,7 @@ The NeuralPlex main connector a `Molex 5007620481`, for power, ground, CAN, I/O,
 
 ![](../../../assets/neuralplex-front-left.jpg)
 
-At a minimum, to run the reference application, you will need to connect `KL30`, `KL15`, `GND`, `CAN0_L`, and `CAN0_R`.
+At a minimum, to run the reference application, you will need to connect `KL30`, `KL15`, `GND`, `CAN0_L`, and `CAN0_H`.
 
 ### Power Supply
 To power up the NeuralPlex, you must ensure your mating connector has the proper connections. Make the connection in the following manner:
@@ -68,7 +68,7 @@ root@neuralplex:~# ssh root@192.168.4.100
 #### Wi-Fi Connection
 By default, the NeuralPlex operates like an Access Point. To connect via Wi-Fi, follow the steps below:
 
-1. Search for a network with SSID: `NeuralPlex-xxx`. The last section of the name will be unique stringfor each device.
+1. Search for a network with SSID: `NeuralPlex-xxx`. The last section of the name will be unique string for each device.
 2. Connect to the network using password: `12345678`.
 3. You can now access the device through SSH as follows:
 

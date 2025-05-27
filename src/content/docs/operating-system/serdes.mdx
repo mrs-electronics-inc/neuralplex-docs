@@ -39,7 +39,7 @@ i2cset -f -y 8 0x2c 0x21 0x09
 ```
 
 ### Debugging
-#### Deserialzier Pattern Generation
+#### Deserializer Pattern Generation
 There are times where it is useful to test the FPD-Link connection of external screen without the NeuralPlex sending video signals.  The `DS90UB948-Q1` allows pattern generation for this purpose.
 
 ```bash title="Pattern Generation"
@@ -160,7 +160,7 @@ WriteI2C $deserAddr 0x65 0x04
 WriteI2C $deserAddr 0x64 0x05
 ```
 
-#### Serialzier Pattern Generation
+#### Serializer Pattern Generation
 The `DS90UB941-Q1` Serializer also allows pattern generation to test the FPD-Link connection between the Serializer and Deserializer.
 
 ```bash title="Pattern Generation"

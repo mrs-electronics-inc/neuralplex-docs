@@ -8,7 +8,7 @@ sidebar:
 NeuralPlex utilizes `systemd-networkd` to configure the baud rate of each CAN bus, as well as other parameters.  There are four CAN busses available on NeuralPlex: `CAN0`, `CAN1`, `CAN2`, `CAN3`.  Three of the CAN busses (CAN0-2) are native on the NXP i.MX8QM.  Each of these CAN busses are also connected internally to the Vehicle Interface Processor (VIP) CAN busses.  The fourth CAN bus is connected to the SOC via the SPI bus.
 
 ### Setting the baud rate
-To set the buad rate, modify the desired network file found at: `/etc/systemd/network/`.  For example, to change the baud rate of CAN0 to 500k, use `vi` to edit the following file:
+To set the baud rate, modify the desired network file found at: `/etc/systemd/network/`.  For example, to change the baud rate of CAN0 to 500k, use `vi` to edit the following file:
 
 ```bash title="can0.network"
 root@neuralplex:~# vi /etc/systemd/network/can0.network
