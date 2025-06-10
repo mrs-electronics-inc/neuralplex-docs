@@ -54,6 +54,15 @@ mode=preferred
 app-ids=com.mrs-electronics.neuralplex-demo-4
 ```
 
+#### Get app-id of application
+To determine the app-id of your application, you can enable debugging to view the app-id.
+```bash title="Check app-id"
+root@neuralplex:~# WAYLAND_DEBUG=1 neuralplex-demo 2>&1 | grep set_app_id
+
+# Result:
+[3645913.156]  -> xdg_toplevel@28.set_app_id("com.mrs-electronics.neuralplex-demo-3")
+```
+
 ### Qt Environment Variables
 When deploying a Qt app from Qt Creator, you need set the following environment variables:
 ```bash title="Qt Environment Variables"
