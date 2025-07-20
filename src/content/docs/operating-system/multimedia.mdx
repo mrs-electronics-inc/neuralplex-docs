@@ -41,6 +41,10 @@ gst-launch-1.0 filesrc location=big_buck_bunny_1080p_h264.mov ! decodebin \
 
 # Play Audio
 gst-launch-1.0 filesrc location=Sultans_Of_Swing.mp3 ! decodebin ! alsasink
+
+# Play Video and Audio
+gst-launch-1.0 filesrc location=big_buck_bunny_1080p_h264.mov ! decodebin name=dec \
+  ! imxvideoconvert_g2d ! waylandsink dec. ! queue ! audioconvert ! alsasink device=hdmi
 ```
 
 ### ALSA

@@ -51,20 +51,20 @@ The NeuralPlex can be accessed through ssh from multiple interfaces.
 - WiFi (Available only if ordered)
 
 #### Ethernet-over-USB (preferred)
-To connect via USB, simply connect to the USB 2.0 connector on the back of the NeuralPlex (gray connector) and plug into your development machine.  By default, the NeuralPlex USB interface is configured with the `g_ether` module and is set with a static IP address of `192.168.5.100`.  Your development machine should have a `usb0` interface and you will need to manually configure your development machine to have a static IP address of `192.168.5.101`, netmask of `255.255.255.0`, and gateway set to `192.168.5.100`.  Once configured, you can now access the device through SSH as follows:
+To connect via USB, simply connect to the USB 2.0 connector on the back of the NeuralPlex (gray connector) and plug into your development machine.  By default, the NeuralPlex USB interface is configured with the `g_ether` module and is set with a static IP address of `10.10.5.1`.  Your development machine should have a `usb0` interface and you will need to manually configure your development machine to have a static IP address of `10.10.5.100`, netmask of `255.255.255.0`, and gateway set to `10.10.5.1`.  Once configured, you can now access the device through SSH as follows:
 
 ```bash title="Connect to NeuralPlex"
-root@neuralplex:~# ssh root@192.168.5.100
+root@neuralplex:~# ssh root@10.10.5.1
 ```
 
 ![USB Network](../../../assets/network-usb.png)
 ![USB Network](../../../assets/network-static-ip.png)
 
 #### Ethernet Connection
-To connect via Ethernet, simply connect to the 1000BASE-TX connector on the front of the NeuralPlex and plug into your development machine. By default, the NeuralPlex ethernet interface is configured as a DHCP server, so it will automatically assign the IP address to the connected device. You can now access the device through SSH as follows:
+To connect via Ethernet, simply connect to the 1000BASE-TX connector on the front of the NeuralPlex and plug into your development machine. By default, the NeuralPlex ethernet interface is configured as a DHCP client, so you will need to run `eth-conf.sh -s` to configure NeuralPlex as a DHCP server, so that it will automatically assign the IP address to the connected device. You can now access the device through SSH as follows:
 
 ```bash title="Connect to NeuralPlex"
-root@neuralplex:~# ssh root@192.168.4.100
+root@neuralplex:~# ssh root@10.10.4.1
 ```
 
 #### Wi-Fi Connection
@@ -75,20 +75,20 @@ By default, the NeuralPlex operates like an Access Point. To connect via Wi-Fi, 
 3. You can now access the device through SSH as follows:
 
 ```bash title="Connect to NeuralPlex"
-root@neuralplex:~# ssh root@192.168.3.100
+root@neuralplex:~# ssh root@10.10.3.1
 ```
 
 ### SSH/SCP Connection
 The connection to Display via SSH/SCP is required to access the terminal or perform actions like sharing files. The details of that are shown in the table below:
 
-| Field                            | Value         |
-| -------------------------------- | ------------- |
-| IP Address (USB Connection)      | 192.168.5.100 |
-| IP Address (Ethernet Connection) | 192.168.4.100 |
-| IP Address (Wi-Fi Connection)    | 192.168.3.100 |
-| Port                             | 22            |
-| Username                         | root          |
-| Password                         | mrsroot       |
+| Field                            | Value     |
+| -------------------------------- | --------- |
+| IP Address (USB Connection)      | 10.10.5.1 |
+| IP Address (Ethernet Connection) | 10.10.4.1 |
+| IP Address (Wi-Fi Connection)    | 10.10.3.1 |
+| Port                             | 22        |
+| Username                         | root      |
+| Password                         | mrsroot   |
 
 ### File System
 The root file system operates in read-only mode as it is safer and faster. However, for actions like copying the user application or enabling a systemd service, the read/write mode is required. To switch to that mode, follow these steps:

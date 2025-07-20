@@ -44,6 +44,10 @@ export default defineConfig({
 					autogenerate: { directory: 'operating-system' },
 				},
 				{
+					label: 'Yocto',
+					autogenerate: { directory: 'yocto' },
+				},
+				{
 					label: 'Other',
 					autogenerate: { directory: 'other' },
 				},

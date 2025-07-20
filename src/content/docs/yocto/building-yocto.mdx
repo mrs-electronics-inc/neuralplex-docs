@@ -1,0 +1,93 @@
+---
+title: Building Yocto
+sidebar:
+  order: 1
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+### Building NeuralPlex OS with Yoco
+The Yocto Project is an open source collaboration project that provides templates, tools and methods to help you create custom Linux-based systems for embedded and IOT products, regardless of the hardware architecture.
+
+#### Prerequisites
+A Yocto Project build requires intensive computing power and specific software packages.
+
+#### Computer for the Yocto Project Build
+A powerful host machine is highly recommended to build a Yocto Project image. If the host system is a multi-core machine, you can configure the Yocto Project build system to decrease the time needed to build images significantly. We recommend around 120 GB of free disk space. For some images, a 32-bit host with 4 GBytes of memory is enough, but to build applications such as the WebKit web engine, a 64-bit machine with at least 8 GBytes of RAM is recommended.
+
+#### Operating System and Build Dependencies
+Yocto Project Release 5.0 is officialy supported by the Yocto Project. The following Linux distributions are supported and you must use one of them on your development PC to build our BSPs:
+* [Supported Linux distributions](https://docs.yoctoproject.org/5.0.6/ref-manual/system-requirements.html#supported-linux-distributions)
+
+You must install the required Yocto build dependencies on your host PC:
+* [Yocto build dependencies](https://docs.yoctoproject.org/5.0.6/ref-manual/system-requirements.html#required-packages-for-the-build-host)
+
+### Getting Started
+Since Yocto requires several git repositories to build our images, we use a utility called 'repo'. The repo manifest manages the various git repositories and their branches. (more on repo: http://code.google.com/p/git-repo/)
+
+Before installing repo, please make sure that you already have curl installed. For Debian-based systems, you can use the following command:
+```bash title="Installing curl"
+$ sudo apt install curl
+```
+
+Then, install the repo bootstrap binary:
+```bash title="Installing repo"
+$ mkdir ~/bin
+$ curl http://commondatastorage.googleapis.com/git-repo-downloads/repo  > ~/bin/repo
+$ chmod a+x ~/bin/repo
+$ PATH=${PATH}:~/bin
+```
+
+Repo uses Git. Make sure you have it installed and your user name and e-mail address configured. Below is an example for Debian-based systems:
+```bash title="Configure Git"
+$ sudo apt install git
+$ git config --global user.name "John Doe"
+$ git config --global user.email johndoe@example.com
+```
+
+#### Download the Yocto Project BSP
+```bash title="Download the Yocto manifest"
+$ mkdir <release>
+$ cd <release>
+$ repo init -u ssh://git@gitlab.com/mrs-neuralplex/yocto/manifest.git -b <branch name>
+$ repo sync
+```
+
+### Examples
+To download the Scarthgap release
+```bash title="Download the Scarthgap release"
+$ mkdir scarthgap
+$ cd scarthgap
+$ repo init -u ssh://git@gitlab.com/mrs-neuralplex/yocto/manifest.git -b scarthgap
+$ repo sync
+```
+
+#### Setup the build folder for a BSP release
+By default, the NeuralPlex image selects the `imx8qm-np` machine, and `fsl-imx-wayland` backend.  If you wish to build for a different machine or backend, you may change this here.
+```bash title="Configure build directory"
+$ [MACHINE=<machine>] [DISTRO=fsl-imx-<backend>] source ./neuralplex-environment.sh -b build
+
+<machine>   defaults to `imx8qm-np`
+<backend>   defaults to `fsl-imx-wayland`
+
+Example:
+$ source ./neuralplex-environment.sh
+```
+
+### Build an image
+```bash title="Build the image"
+$ bitbake <image recipe>
+```
+
+#### Some example recipes:
+Image Name           | Description
+---------------------|---------------------------------------------------
+neuralplex-image     | image with multimedia, graphics and Qt
+linux-imx            | Linux kernel
+u-boot-imx           | u-boot Bootloader
+
+### New Session
+Once you have setup the build environment once, any time you open a new session/terminal you will need to issue the following command:
+```bash title="New Session"
+$ source setup-environment build
+```
