@@ -1,0 +1,73 @@
+---
+title: Multimedia
+sidebar:
+  order: 5
+---
+
+### GStreamer
+GStreamer is a powerful pipeline-based multimedia framework.
+It allows programmers to create a variety of media-handling components, including simple audio playback, audio and video playback, recording, streaming and editing.
+This is not a GStreamer reference manual but an overview for using it on NeuralPlex.
+This release uses the gstreamer-imx set of GStreamer 1.0 plugins for NXP's i.MX platform, which make use of the i.MX multimedia capabilities.
+
+There are two major commands:
+`gst-inspect` - allows you to to get documentation on available elements and detailed information on a specific element.
+`gst-launch` - allows you to create and execute GStreamer pipelines.
+```bash title="GStreamer audio/video sinks"
+root@neuralplex:~# gst-inspect-1.0 | grep sink
+pulseaudio:  pulsesink: PulseAudio Audio Sink
+hls:  hlssink2: HTTP Live Streaming sink
+hls:  hlssink: HTTP Live Streaming sink
+bluez:  avdtpsink: Bluetooth AVDTP sink
+bluez:  a2dpsink: Bluetooth A2DP sink
+coreelements:  filesink: File Sink
+coreelements:  fdsink: Filedescriptor Sink
+coreelements:  fakesink: Fake Sink
+alsa:  alsasink: Audio sink (ALSA)
+gdkpixbuf:  gdkpixbufsink: GdkPixbuf sink
+...
+```
+
+Detailed hlep on specific element:
+```bash title="GStreamer gst-inspect-1.0"
+root@neuralplex:~# gst-inspect-1.0 <name of the element>
+```
+
+Here are a couple examples of playing video and audio files:
+```bash title="GStreamer Video/Audio"
+# Play Video
+gst-launch-1.0 filesrc location=big_buck_bunny_1080p_h264.mov ! decodebin \
+  ! imxvideoconvert_g2d ! waylandsink
+
+# Play Audio
+gst-launch-1.0 filesrc location=Sultans_Of_Swing.mp3 ! decodebin ! alsasink
+
+# Play Video and Audio
+gst-launch-1.0 filesrc location=big_buck_bunny_1080p_h264.mov ! decodebin name=dec \
+  ! imxvideoconvert_g2d ! waylandsink dec. ! queue ! audioconvert ! alsasink device=hdmi
+```
+
+### ALSA
+```bash title="ALSA speaker-test"
+# Speaker Test (Play 440Hz sin wave)
+speaker-test -c8 -t sin -f440 -P9 -s7
+
+# Speaker Test (Play wav file on specific speaker output)
+speaker-test -c8 -t wav -w ~/Welcome_to_the_Jungle.wav -P9 -s7
+
+# Speaker Mapping:
+s1 = OUT1
+s2 = OUT5
+s3 = OUT2
+s4 = AMP_L
+s5 = OUT4
+s6 = OUT3
+s7 = AMP_R
+s8 = OUT6
+
+# Record Audio
+arecord -D plughw:0,1 -r 48000 -f S32_LE sample.wav -c4
+
+# Play Audio
+aplay Sultans_Of_Swing.wav
+```

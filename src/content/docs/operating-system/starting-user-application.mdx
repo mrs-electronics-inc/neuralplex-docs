@@ -1,0 +1,72 @@
+---
+title: Starting User Application
+sidebar:
+  order: 1
+---
+
+### Copying user application to NeuralPlex
+The user application can be manually transferred to the NeuralPlex via Ethernet-over-USB.  If the filesystem is read-only, you will need to re-mount the drive as read-write before transferring:
+```bash title="NeuralPlex"
+# Mount drive as read-write
+root@neuralplex:~# mount -o remount,rw /
+
+# After you copy the file, mount the drive back to read-only
+root@neuralplex:~# mount -o remount,ro /
+```
+
+```bash title="Development Machine"
+# On development machine:
+$ scp my-awesome-app root@192.168.5.100:/opt/my-awesome-app
+```
+
+### Starting user application manually
+Add the permission to execute the application with the following commands:
+```bash title="NeuralPlex"
+root@neuralplex:~# chmod +x /opt/my-awesome-app
+root@neuralplex:~# /opt/my-awesome-app
+```
+
+### Starting user Application Automatically
+To start your application automatically, a systemd service is available and enabled by default.  This service will automatically restart if the user application crashes.  The systemd service is shown below:
+```bash title="startup-app.service"
+root@neuralplex:~# vi /etc/systemd/system/startup-app.service 
+[Unit]
+Description=Start Qt Application service
+After=network.target
+
+[Service]
+Type=simple
+Environment="WAYLAND_DISPLAY=/run/wayland-0"
+Environment="XDG_RUNTIME_DIR=/run/user/0"
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/startup-app.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+
+As seen from the `ExecStart` command, the systemd service makes a call to `/usr/bin/startup-app.sh`.  Should you require modifying the app that starts at boot, you will need to modify this file:
+```bash title="startup-app.sh"
+root@neuralplex:~# vi /usr/bin/startup-app.sh 
+#!/bin/bash
+
+# Start app on screen #1 and send to background
+/opt/neuralplex-demo/bin/neuralplex-demo-1 &
+
+# Start app on screen #2
+/opt/neuralplex-demo/bin/neuralplex-demo-2
+```
+
+### Enable/Disable Service
+To enable or disable the default Startup-App service, run the following command:
+```bash title="Enable/Disable Service"
+# Disable
+root@neuralplex:~# systemctl stop startup-app
+
+# Enable
+root@neuralplex:~# systemctl start startup-app
+
+# Restart
+root@neuralplex:~# systemctl restart startup-app
+```

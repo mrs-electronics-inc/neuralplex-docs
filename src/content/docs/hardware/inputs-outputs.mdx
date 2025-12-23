@@ -1,0 +1,162 @@
+---
+title: Inputs and Outputs
+sidebar:
+  order: 1
+---
+
+The NeuralPlex has a separate Vehicle Interface Processor (VIP) that is responsible for all analog inputs, PWM outputs, VRef, RS232/485, and LIN.  It also shares three of the four CAN buses with the SOC, allowing it to send/recieve CAN messages during the early boot process.  The VIP interfaces with the SOC via a high speed SPI bus, and is used by the SOC to configure the baud rate of each CAN bus to ensure the VIP and SOC do not have conflicting baud rates.  The SPI bus is configured as show below.
+
+### Bus Settings
+- MSB first
+- SCLK active high
+- CS active low
+- Data capture on 1st edge, shift (transmit) on 2nd
+- 100kHz clock speed
+
+### Frame Structure
+| OP Code | Data Packet |
+| ------- |-------------|
+| 1 Byte  |   4 Bytes   |
+|MSB\<--- | --->LSB     |
+
+### OP Codes
+```bash title="OP Codes"
+0x00 - NOP
+0x10 - ANALOG_INPUT_READ
+0x11 - ANALOG_INPUT_CONFIG
+0x20 - PWM_ENABLE
+0x21 - PWM_CONFIG
+0x30 - VREF_ENABLE
+0x31 - VREF_CONFIG
+0x41 - CAN_BAUD_RATE_CONFIG
+0x50 - RS232_STREAM
+0x51 - RS232_CONFIG
+0x60 - DATA_READY_DECODE
+0x61 - DATA_RECEIVE
+```
+
+### Messages
+Individual messages are outlined in the protocol below.  The ID represents the OP Code, Byte 0 represents MSB. Message with ID of `0x1XY` represents the response message sent back to the SOC (master) one frame after receiving `0xXY`.  A full frame of 0's serves as a NOP to allow the SOC to receive a response without sending more data to the VIP. Response to NOP will also be a frame consisting entirely of 0's.
+
+### SPI Protocol
+
+```bash title="SPI_Protocol.sym"
+FormatVersion=6.0 // Do not edit this line!
+Title="SOC to VIP SPI Bus Protocol"
+
+{ENUMS}
+Enum=PWM_PARAMETER(0="FREQUENCY", 1="PERIOD", 2="DUTY_CYCLE")
+Enum=PARITY(0="NONE", 1="ODD", 2="EVEN", 3="MARK", 4="SPACE")
+Enum=ADC_RESOLUTION(0="10", 1="11", 2="12")
+Enum=DATA_TYPE(0="NONE", 1="STATUSES", 2="RS232", 3="RS485")
+
+{SENDRECEIVE}
+
+[PWM_CONFIG]
+ID=021h
+Var=PWM_PARAMTER unsigned 0,2 /max:1 /e:PWM_PARAMETER
+Var=VALUE unsigned 8,24 -m /max:1
+Var=CHANNELS unsigned 4,4
+
+[PWM_ENABLE]
+ID=020h
+Var=ENABLE unsigned 0,4 /max:1
+
+[VREF_CONFIG]
+ID=031h
+Var=VALUE unsigned 0,32 -m /max:1
+
+[VREF_ENABLE]
+ID=030h
+Var=ENABLE unsigned 0,1
+
+[RS232_CONFIG]
+ID=051h
+Var=BAUD_RATE unsigned 0,5 /max:1
+Var=RS485_FLAG unsigned 7,1
+Var=BITS_PER_CHAR unsigned 8,4 /max:1
+Var=PARITY unsigned 12,3 /max:1 /e:PARITY
+Var=STOP_BITS unsigned 15,1
+
+[RS232_STREAM]
+ID=050h
+Var=TX unsigned 0,32 -m /max:1
+
+[ANALOG_INPUT_CONFIG]
+ID=011h
+Var=RESOLUTION unsigned 0,2 /max:1 /e:ADC_RESOLUTION
+
+[ANALOG_INPUT_READ]
+ID=010h
+Var=CHANNEL unsigned 0,4 /max:1
+
+[CAN_BAUD_RATE_CONFIG]
+ID=041h
+Var=CHANNEL unsigned 0,4 /max:1
+Var=VALUE unsigned 8,24 -m /max:1
+
+[ANALOG_INPUT_CONFIG_Response]
+ID=111h
+Var=RESOLUTION unsigned 0,2 /max:1 /e:ADC_RESOLUTION
+
+[ANALOG_INPUT_READ_Response]
+ID=110h
+Var=CHANNEL unsigned 0,4 /max:1
+Var=VALUE unsigned 8,16 -m /max:1
+
+[CAN_BAUD_RATE_CONFIG_Response]
+ID=141h
+Var=CHANNEL unsigned 0,4 /max:1
+Var=VALUE unsigned 8,24 -m /max:1
+
+[PWM_CONFIG_Response]
+ID=121h
+Var=PWM_PARAMTER unsigned 0,2 /max:1 /e:PWM_PARAMETER
+Var=VALUE unsigned 8,24 -m /max:1
+Var=CHANNELS unsigned 4,4
+
+[PWM_ENABLE_Response]
+ID=120h
+Var=ENABLE unsigned 0,4 /max:1
+
+[RS232_CONFIG_Response]
+ID=151h
+Var=BAUD_RATE unsigned 0,5 /max:1
+Var=RS485_FLAG unsigned 7,1
+Var=BITS_PER_CHAR unsigned 8,4 /max:1
+Var=PARITY unsigned 12,3 /max:1 /e:PARITY
+Var=STOP_BITS unsigned 15,1
+
+[RS232_STREAM_Response]
+ID=150h
+Var=TX unsigned 0,32 -m /max:1
+
+[VREF_CONFIG_Response]
+ID=131h
+Var=VALUE unsigned 0,32 -m /max:1
+
+[VREF_ENABLE_Response]
+ID=130h
+Var=ENABLE unsigned 0,1
+
+[NOP]
+ID=000h
+
+[NOP_Response]
+ID=100h
+
+[DATA_READY_DECODE]
+ID=060h
+
+[DATA_READY_DECODE_Response]
+ID=160h
+Var=DATA_TYPE unsigned 0,2 /e:DATA_TYPE
+Var=BYTES unsigned 8,8
+
+[DATA_RECEIVE]
+ID=061h
+
+[DATA_RECEIVE_Response]
+ID=161h
+Var=DATA unsigned 0,32 -m
+```

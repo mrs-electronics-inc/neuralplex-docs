@@ -1,0 +1,73 @@
+---
+title: I2C
+sidebar:
+  order: 8
+---
+
+NeuralPlex includes i2c-tools as a part of the default file system build, examples of optional commands:
+| Command | Description |
+| -- | -- |
+| i2cdetect | detect the devices present on the I2C bus |
+| i2cdump | dump the content of an I2C device |
+| i2cset | write a single character to an I2C device |
+| i2cget | read a single character to an I2C device |
+
+### Detecting I2C devices
+```bash title="Detecting I2C Devices"
+root@neuralplex:~# i2cdetect -y 6
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- UU -- -- 19 -- -- -- -- -- -- 
+20: -- -- -- -- 24 -- -- -- -- -- -- -- UU -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- UU -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- 62 -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --
+```
+
+### I2C Devices
+```bash title="NeuralPlex I2C Devices"
+# Bus 4
+0x28 = PMIC, MAX20087
+0x29 = PMIC, MAX20087
+0x44 = Audio Codec
+0x60 = Tuner
+0x6b = IMU
+
+# Bus 5
+0x10 = Apple Authentication
+0x68 = RTC
+0x77 = Temperature and Barometric Pressure
+
+# Bus 6: LVDS-1
+0x14 = 10.1" Touchscreen
+0x16 = Serializer
+0x19 = Accelerometer
+0x24 = GPIO Expander
+0x25 = GPIO Expander
+0x2c = Deserializer
+0x41 = 12.3" Touchscreen
+0x5c = 7" Touchscreen
+
+# Bus 7: LVDS-2
+0x14 = 10.1" Touchscreen
+0x16 = Serializer
+0x19 = Accelerometer
+0x24 = GPIO Expander
+0x25 = GPIO Expander
+0x2c = Deserializer
+0x41 = 12.3" Touchscreen
+0x5c = 7" Touchscreen
+
+# Bus 8: DSI-1
+0x14 = 10.1" Touchscreen
+0x16 = Serializer
+0x19 = Accelerometer
+0x24 = GPIO Expander
+0x25 = GPIO Expander
+0x2c = Deserializer
+0x41 = 12.3" Touchscreen
+0x5c = 7" Touchscreen
+0x5d = 15.6" Touchscreen
+```

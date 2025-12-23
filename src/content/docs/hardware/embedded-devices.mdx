@@ -1,0 +1,37 @@
+---
+title: Embedded Devices
+sidebar:
+  order: 3
+---
+
+The NeuralPlex is equipped with several embedded devices, which add multiple functionalities. This section describes each of those embedded devices.
+
+### GNSS
+The NeuralPlex can have a GNSS receiver to support concurrent reception of up to 3 GNSS (GPS, Galileo, GLONASS, BeiDou). The GNSS receiver provides the location using NMEA data (UART interface on the NeuralPlex) available on the path: /dev/ttyLP1.
+
+```bash title="View output from GNSS Receiver"
+root@neuralplex:~# echo 0 > /proc/sys/kernel/sysrq
+
+# Enable GPS
+root@neuralplex:~# gpioset -c6 26=0 
+
+# Open Screen with baud rate at 38400
+root@neuralplex:~#screen /dev/ttyLP1 38400
+```
+
+You can also utilize the GNSS Reciver in your Qt application by using the `QtSerialPort` library:
+
+```cpp
+// Sensors.cpp
+gps *m_gps = new gps(m_version, &app);
+m_gps->start();
+```
+
+### AM/FM Radio Tuner
+The NeuralPlex has a high-performance AM/FM tuner. When the scan for an FM/AM station is made, NeuralPlex tunes to the station within the threshold of field strength. The Alsa library in the Reference App controls the selection between audio output from Linux OS and the AM/FM radio tuner. To control it via C++ in the Reference App, use the following code:
+
+```cpp
+// main.cpp
+Tuner *tuner = new Tuner();
+engine.rootContext()->setContextProperty("tuner", tuner);
+```

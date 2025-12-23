@@ -1,0 +1,73 @@
+---
+title: Connectivity
+sidebar:
+  order: 5
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+### WiFi
+In some configurations, the NeuralPlex comes equipped with an 802.11b/g/n module that can be set up as an Access Point (AP) or a client.  By default, the Wi-Fi module is set up as an AP, broadcasting the SSID: NeuralPlex-xxx with a passphrase: 12345678.
+
+#### Access Point Mode
+To set the Wi-Fi in the Access Point (AP) mode, follow the steps below:
+
+<Steps>
+1. Edit the configuration file for the AP mode:
+    ```bash
+    root@neuralplex:~# vi /etc/NetworkManager/system-connections/wifi-ap.nmconnection
+    ```
+2. Enter the following terminal commands to enable the AP mode:
+    ```bash
+    root@neuralplex:~# nmcli con down wifi-client
+    root@neuralplex:~# nmcli con up wifi-ap
+    ```
+</Steps>
+Now, you will be able to connect a client to the NeuralPlex.
+
+#### Client Mode
+To set the Wi-Fi in the Client mode, follow the steps below:
+
+<Steps>
+1. Edit the configuration file for the client mode:
+    ```bash
+    root@neuralplex:~# vi /etc/NetworkManager/system-connections/wifi-client.nmconnection
+    ```
+2. Enter the following terminal commands to enable the STA mode:
+    ```bash
+    root@neuralplex:~# nmcli con down wifi-ap
+    root@neuralplex:~# nmcli con up wifi-client
+    ```
+3. Use the command ifconfig to ensure the connection of NeuralPlex to the Access Point.
+</Steps>
+
+If you wish for Client mode to be the default, you must change the `autoconnect` parameter in both `wifi-ap.nmconnection` and `wifi-client.nmconnection` files.  Setting the `autoconnect=true` will make that mode default.  Only one of the files can have `autoconnect=true`.
+
+<Aside>
+Numerous settings can be configured in the config files.  For a full datasheet of the Wi-Fi module, contact MRS Electronic.
+</Aside>
+
+### Bluetooth
+In some configurations, the NeuralPlex comes equipped with Bluetooth 5 and the BlueZ software.  The Bluetooth can be controlled via C++ code and from the terminal.
+
+### 1000Base-TX (Gigabit Ethernet)
+The NeuralPlex has one Gigabit Ethernet interface that allows connection to the LAN network.  The Ethernet interface can be configured in either DHCP client or DHCP server mode. By default, it's configured as a DHCP client.
+
+To configure the ethernet, use the following terminal commands:
+```bash title="Ethernet Configuration"
+# For help and possible modes
+root@neuralplex:~# eth-conf.sh -h 
+
+# configuring as DHCP server 
+root@neuralplex:~# eth-conf.sh -s
+
+# configuring as DHCP client 
+root@neuralplex:~# eth-conf.sh -c
+```
+
+### 100BASE-T1 (Automotive Ethernet)
+TODO
+
+### Cellular
+```bash
+root@neuralplex:~# screen /dev/ttyUSB0
+```

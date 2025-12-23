@@ -1,0 +1,281 @@
+---
+title: Sensors
+sidebar:
+  order: 2
+---
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The NeuralPlex has several sensors that can be interfaced with your software application.
+
+### 6-axis IMU (Accelerometer + Gyroscope)
+The LSM6DS1 IMU is internal to the  NeuralPlex. It is a 6DOF chip and comes with the following:
+
+- 3D digital linear acceleration sensors
+- 3D digital angular rate sensors
+
+It uses the I2C serial bus interface to communicate with the SOC. In the Qt application, the RTIMULib is used to communicate with the device. The library requires a settings file to run properly. This file includes general IMU settings and those related to the IMU chip (LSM6DS1) in use.
+
+The library contains a calibration document with calibration values, which can be used to remove IMU soft and hard iron disturbances.
+
+The C++ implementation of RTIMULib in the Reference App is as follows:
+
+```cpp
+// Sensors.cpp
+RTIMUSettings *settings = new RTIMUSettings("RTIMULib");
+RTIMU *imu = RTIMU::createIMU(settings);
+
+imu->IMUInit();
+imu->setSleepPower(0.02);
+imu->setGyroEnable(true);
+imu->setAccelEnable(true);
+imu->setCompassEnable(true);
+
+while (imu->IMURead()) 
+{
+    RTIMU_DATA imuData = imu->getIMUData();
+}
+```
+
+#### Reading IMU from userspace
+It is also possible to read the IMU data from userspace using the following commands below:
+
+```bash title="Read IMU data from userspace"
+root@neuralplex:~# cat /sys/bus/iio/devices/iio\:device1/in_accel_x_raw
+
+# Read other x,y,z values as required
+```
+
+### Real-Time Clock
+The NeuralPlex has two integrated RTCs.  One RTC is intergrated into the PMIC (rtc0), and the other is a secondary, low-power RTC (rtc1).  The RTC keeps track of the current time when the NeuralPlex is not powered on and re-syncs with the Linux OS when power is restored.
+
+To set up the RTC, enter the following commands in the terminal:
+
+```bash title="Set date/time on RTC"
+root@neuralplex:~# date -s "2025-05-16 21:00:00" &  hwclock -f /dev/rtc1 -w
+```
+
+#### Wake on RTC
+If your application requires wake on RTC, you must utilize the RTC integrated into the PMIC (rtc0)
+
+```bash title="Wake on RTC"
+# wake from RTC in 30 seconds
+root@neuralplex:~# echo +30 > /sys/class/rtc/rtc0/wakealarm
+root@neuralplex:~# echo deep > /sys/power/mem_sleep
+root@neuralplex:~# echo mem > /sys/power/state
+```
+
+### Barometric Pressure & Temperature Sensor
+DPS368
+
+<Tabs>
+  <TabItem label="main.cpp">
+    ```cpp
+    #include <QCoreApplication>
+    #include "DPS368.h"
+
+    int main(int argc, char *argv[])
+    {
+        QCoreApplication a(argc, argv);
+        DPS368 dps368();
+
+        return a.exec();
+    }
+    ```
+  </TabItem>
+  <TabItem label="DPS368.h">
+    ```cpp
+    #pragma once
+
+    #include <QObject>
+    #include <QtCore>
+    #include <fcntl.h>
+    #include <unistd.h>
+    #include <sys/ioctl.h>
+    #include <linux/i2c-dev.h>
+    #include <linux/i2c.h>
+
+    #define DPS_I2C_PATH "/dev/i2c-5"
+    #define DPS_ADDR 0x77
+
+    class DPS368 : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY (int boardTemp READ boardTemp WRITE setBoardTemp NOTIFY boardTempChanged)
+
+    public:
+        explicit DPS368(QObject* parent = NULL);
+        void setBoardTemp(const int &boardTemp);
+        int boardTemp() const;
+
+    private slots:
+        void refresh(void);
+        void startTimer();
+        bool openI2cDevice(const QString& devicePath);
+        bool writeI2cRegister(int slaveAddress, int registerAddress, int data);
+        int readI2cRegister(int slaveAddress, int registerAddress);
+        int getTwosComplement(int raw_val, int length);
+
+    signals:
+        void boardTempChanged();
+
+    private:
+        int m_boardTemp;
+        int m_c0;
+        int m_c1;
+        QFile i2cDevice;
+    };
+    ```
+  </TabItem>
+  <TabItem label="DPS368.cpp">
+    ```cpp
+    #include "DPS368.h"
+
+    DPS368::DPS368(QObject* parent)
+        , m_boardTemp(0)
+        , m_c0(0)
+        , m_c1(0)
+    {
+        openI2cDevice(DPS_I2C_PATH);
+
+        // Workaround
+        writeI2cRegister(DPS_ADDR, 0x0e, 0xa5);
+        writeI2cRegister(DPS_ADDR, 0x0f, 0x96);
+        writeI2cRegister(DPS_ADDR, 0x62, 0x02);
+        writeI2cRegister(DPS_ADDR, 0x0e, 0x00);
+        writeI2cRegister(DPS_ADDR, 0x0e, 0x00);
+
+        // Read C0 and C1 values
+        int reg10 = readI2cRegister(DPS_ADDR, 0x10);
+        int reg11 = readI2cRegister(DPS_ADDR, 0x11);
+        int reg12 = readI2cRegister(DPS_ADDR, 0x12);
+
+        // Setup
+        writeI2cRegister(DPS_ADDR, 0x06, 0x26);
+        writeI2cRegister(DPS_ADDR, 0x07, 0xa6);
+        writeI2cRegister(DPS_ADDR, 0x08, 0x07);
+        writeI2cRegister(DPS_ADDR, 0x09, 0x0c);
+
+        i2cDevice.close();
+
+        m_c0 = (reg10 << 4) | (reg11 >> 4);
+        m_c0 = getTwosComplement(m_c0, 12);
+
+        m_c1 = ((reg11 & 0x0f) << 8) | reg12;
+        m_c1 = getTwosComplement(m_c1, 12);
+
+        startTimer();
+    }
+
+    void DPS368::startTimer()
+    {
+        // Open the i2c device and leve it open
+        openI2cDevice(DPS_I2C_PATH);
+
+        // Refresh every 1000ms
+        QTimer *dps = new QTimer(this);
+        connect(dps, SIGNAL(timeout()), this, SLOT(refresh()));
+        dps->start(1000);
+    }
+
+    void DPS368::refresh()
+    {
+        int t2 = readI2cRegister(DPS_ADDR, 0x03);
+        int t1 = readI2cRegister(DPS_ADDR, 0x04);
+        int t0 = readI2cRegister(DPS_ADDR, 0x05);
+
+        int t_raw = (t2 << 16) | (t1 << 8) | t0;
+        t_raw = getTwosComplement(t_raw, 24);
+
+        float kT = 1040384.0;
+        float t_raw_sc = t_raw / kT;
+        float tcomp = (m_c0 * 0.5) + (m_c1 * t_raw_sc);
+
+        setBoardTemp(tcomp);
+    }
+
+    int DPS368::getTwosComplement(int raw_val, int length)
+    {
+        int val = raw_val;
+        if (raw_val & (1 << (length - 1)))
+        {
+            val = raw_val - (1 << length);
+        }
+
+        return val;
+    }
+
+    bool DPS368::openI2cDevice(const QString& devicePath)
+    {
+        i2cDevice.setFileName(devicePath);
+        return i2cDevice.open(QIODevice::ReadWrite);
+    }
+
+    bool DPS368::writeI2cRegister(int slaveAddress, int registerAddress, int data)
+    {
+        int file;
+        unsigned char data_to_write[2] = { registerAddress, data };
+
+        if ((file = open(i2cBus.toUtf8().constData(), O_RDWR)) < 0) {
+            qDebug() << "Failed to open the i2c bus";
+            return false;
+        }
+        if (ioctl(file, I2C_SLAVE_FORCE, slaveAddress) < 0) {
+            qDebug() << "Failed to acquire bus access and/or talk to slave.";
+            close(file);
+            return false;
+        }
+        if (write(file, data_to_write, 2) != 2) {
+            qDebug() << "Failed to write to the i2c bus.";
+            close(file);
+            return false;
+        }
+
+        close(file);
+        return true;
+    }
+
+    int DPS368::readI2cRegister(int slaveAddress, int registerAddress)
+    {
+        struct i2c_msg messages[2];
+        struct i2c_rdwr_ioctl_data ioctl_data;
+        unsigned char readData;
+
+        // Write register address
+        messages[0].addr = slaveAddress;
+        messages[0].flags = 0;
+        messages[0].len = 1;
+        messages[0].buf = (unsigned char*)&registerAddress;
+
+        // Read data from register
+        messages[1].addr = slaveAddress;
+        messages[1].flags = I2C_M_RD;
+        messages[1].len = 1;
+        messages[1].buf = &readData;
+
+        ioctl_data.msgs = messages;
+        ioctl_data.nmsgs = 2;
+
+        if (ioctl(i2cDevice.handle(), I2C_RDWR, &ioctl_data) < 0)
+        {
+            return -1; // Error
+        }
+
+        return readData;
+    }
+
+    void DPS368::setBoardTemp(const int &boardTemp)
+    {
+        if (boardTemp != m_boardTemp)
+        {
+            m_boardTemp = boardTemp;
+            emit boardTempChanged();
+        }
+    }
+
+    int DPS368::boardTemp() const
+    {
+        return m_boardTemp;
+    }
+    ```
+  </TabItem>
+</Tabs>

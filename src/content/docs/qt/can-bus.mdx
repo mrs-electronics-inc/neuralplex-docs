@@ -1,0 +1,119 @@
+---
+title: CAN Bus
+sidebar:
+  order: 3
+---
+
+NeuralPlex utilizes the Qt `QCanBus` class for all CAN bus messaging.  The reference application provides `CanBus.cpp` and `CanBus.hpp` wrapper class that handles sending, receiving, timeout, and other related events.
+
+The module is built upon the foundational principles of Linux Socket CAN, offering a simplified interface through functions and signals to streamline day-to-day tasks. At its core, the module employs socket programming to transmit and receive CAN messages. NeuralPlex supports concurrent operations on four CAN buses, namely `CAN0`, `CAN1`, `CAN3`, and `CAN4`.
+
+Additionally, it extends its functionality to support virtual CAN interfaces, `vcan0`, catering to desktop environment testing requirements.
+
+To utilize the NeuralPlex `CanBus` class, create a new class and use a `QSharedPointer` to pass in the pointer to the `CanBus` class.  For example, create a new `Vehicle` class and add the following:
+
+### Vehicle Class
+```cpp
+// Vehicle.cpp
+// This class establishes a connection to a CAN bus & is used
+// to send/receive CAN frames.
+// To watch for CAN frames, connect to the frameArrived signal.
+// To send CAN frames, connect a signal to the writeFrame() slot.
+Vehicle::Vehicle(QSharedPointer<CanBus> canBus, QObject *parent)
+    : QObject(parent)
+    , m_canBus(canBus)
+{
+    // Set the CAN IDs that the Vehicle class needs to monitor
+    m_canBus->setVehicleIds({ DD1, CCVS1, SENSOR });
+
+    // Get notified when a CAN message for the Vehicle class arrives
+    connect(m_canBus.data(), &CanBus::vehicleFrameArrived, 
+      this, &Vehicle::processMessage);
+
+    // Start a 100ms timer to send CAN messages
+    startTimer(100);
+}
+```
+
+#### Receving CAN messages
+```cpp
+// Vehicle.cpp
+// Process CAN messages by decoding the signal and reporting to QML
+void Vehicle::processMessage(const QCanBusFrame &frame)
+{
+    const auto frameId = frame.frameId();
+    const auto *payload = (uint8_t*)(frame.payload().constData());
+
+    // Begin the switch statement for processing each CAN frame
+    switch (frameId)
+    {
+    case DD1: {
+        setFuelLevel(decode(payload, 8, 8, false, false, 0.4, 0));
+        break;
+    }
+    case CCVS1: {
+        setSpeedometer(decode(payload, 8, 16, false, false, 0.00390625, 0));
+        break;
+    }
+    case SENSOR: {
+        setSensor1(decode(payload, 0, 8, false, true, 0.4, 0));
+        setSensor2(decode(payload, 8, 8, false, true, 0.4, 0));
+        setSensor3(decode(payload, 16, 8, false, true, 0.4, 0));
+        setSensor4(decode(payload, 24, 8, false, true, 0.4, 0));
+        break;
+    }
+    default:
+        break;
+    }
+}
+```
+
+#### Sending CAN messages
+```cpp
+// Vehicle.cpp
+void Vehicle::startTimer(uint8_t val)
+{
+    // Setup QTimer instance to expire as defined by timeout value
+    QTimer *can = new QTimer(this);
+    connect(can, SIGNAL(timeout()), this, SLOT(sendCAN()));
+    can->start(val);
+}
+
+void Vehicle::sendCAN()
+{
+    QCanBusFrame frame;
+    uint8_t dd1Payload[8] {0};
+    frame.setFrameId(DD1);
+    encode(dd1Payload, fuelLevel(), 8, 8, false, false, 0.4, 0);
+    frame.setPayload(QByteArray::fromRawData((const char*)dd1Payload, 8));
+    m_canBus->writeFrame(frame);
+
+    uint8_t ccvs1Payload[8] {0};
+    frame.setFrameId(CCVS1);
+    encode(ccvs1Payload, speedometer(), 8, 16, false, false, 0.00390625, 0);
+    frame.setPayload(QByteArray::fromRawData((const char*)ccvs1Payload, 8));
+    m_canBus->writeFrame(frame);
+
+    uint8_t sensorPayload[8] {0};
+    frame.setFrameId(SENSOR);
+    encode(sensorPayload, sensor1(), 0, 8, false, true, 0.4, 0);
+    encode(sensorPayload, sensor2(), 8, 8, false, true, 0.4, 0);
+    encode(sensorPayload, sensor3(), 16, 8, false, true, 0.4, 0);
+    encode(sensorPayload, sensor4(), 24, 8, false, true, 0.4, 0);
+    frame.setPayload(QByteArray::fromRawData((const char*)sensorPayload, 8));
+    m_canBus->writeFrame(frame);
+}
+```
+
+#### CanBus Setup
+```cpp
+// main.cpp
+// Create instance of CanBus class and share the pointer
+// with other classes so they are notified when messages arrive
+QSharedPointer<CanBus> canBusPointer = QSharedPointer<CanBus>::create("CAN0");
+Vehicle* vehicle = new Vehicle(canBusPointer);
+
+// Setup the context properties so the front end (QML) can access the back end (C++)
+QQmlApplicationEngine engine;
+engine.rootContext()->setContextProperty("vehicle", vehicle);
+```

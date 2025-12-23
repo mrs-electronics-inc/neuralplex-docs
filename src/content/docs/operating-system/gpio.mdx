@@ -1,0 +1,81 @@
+---
+title: GPIO
+sidebar:
+  order: 7
+---
+
+The current state of the system's GPIOs can be obtained in user-mode, as shown in the following example:
+```bash title="gpiodetect"
+root@neuralplex:~# gpiodetect
+gpiochip0 [5d080000.gpio] (32 lines)
+gpiochip1 [5d090000.gpio] (32 lines)
+gpiochip2 [5d0a0000.gpio] (32 lines)
+gpiochip3 [5d0b0000.gpio] (32 lines)
+gpiochip4 [5d0c0000.gpio] (32 lines)
+gpiochip5 [5d0d0000.gpio] (32 lines)
+gpiochip6 [5d0e0000.gpio] (32 lines)
+gpiochip7 [5d0f0000.gpio] (32 lines)
+```
+
+|  |  |
+| -- | -- |
+| gpiodetect |	List all gpiochips present on the system, their names, labels and number of GPIO lines |
+| gpioinfo |	List all lines of specified gpiochips, their names, consumers, direction, active state and additional flags |
+| gpioget |	Read values of specified GPIO lines |
+| gpioset |	Set values of specified GPIO lines, potentially keep the lines exported and wait until timeout, user input or signal |
+| gpiofind |	Find the gpiochip name and line offset given the line name |
+| gpiomon |	Wait for events on GPIO lines, specify which events to watch, how many events to process before exiting or if the events should be reported to the console |
+
+### gpioinfo
+```bash title="gpioinfo"
+root@neuralplex:~# gpioinfo -c4
+gpiochip4 - 32 lines:
+	line   0:	"                   "	input
+	line   1:	"                   "	output active-low consumer="enable"
+	line   2:	"                   "	input
+	line   3:	"usb3-hub-reset     "	input
+	line   4:	"                   "	input
+	line   5:	"                   "	input
+	line   6:	"                   "	input
+	line   7:	"                   "	input
+	line   8:	"                   "	input
+	line   9:	"                   "	input
+	line  10:	"                   "	input
+	line  11:	"                   "	input
+	line  12:	"sd-card-detect     "	input active-low consumer="cd"
+	line  13:	"                   "	input
+	line  14:	"                   "	input
+	line  15:	"                   "	input
+	line  16:	"                   "	input
+	line  17:	"                   "	input
+	line  18:	"                   "	input
+	line  19:	"wlreg_on           "	input
+	line  20:	"bluetooth-disable  "	input
+	line  21:	"                   "	input
+	line  22:	"cellular-disable   "	input
+	line  23:	"                   "	output
+	line  24:	"audio-reset        "	input
+	line  25:	"cellular-reset     "	input
+	line  26:	"gps-reset          "	input
+	line  27:	"pcie0-clkreq-b     "	output active-low consumer="enable"
+	line  28:	"pcie01-wake-b      "	input
+	line  29:	"pcie0-reset-b      "	input
+	line  30:	"pcie1-clkreq-b     "	input
+	line  31:	"                   "	input
+```
+### gpioget
+The gpioget utility can be used to manipulate GPIO from the command line.
+
+For example, to read the value of the `audio-reset` GPIO pin:
+```bash title="gpioget"
+root@neuralplex:~# gpioget -c4 24
+"24"=inactive
+```
+
+### gpioset
+The gpioset utility can be used to manipulate GPIO from the command line.
+
+For example, to set the value of the `audio-reset` GPIO pin:
+```bash title="gpioset"
+root@neuralplex:~# gpioset -c4 24=1
+```

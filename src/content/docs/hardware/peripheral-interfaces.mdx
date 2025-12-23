@@ -1,0 +1,63 @@
+---
+title: Peripheral Interfaces
+sidebar:
+  order: 4
+---
+import { Steps } from '@astrojs/starlight/components';
+
+### SSD
+
+```bash title="Format SSD"
+root@neuralplex:~# mkfs.ext4 /dev/nvme0n1
+```
+
+### Micro SD
+The NeuralPlex holds an SD card slot that is an additional storage for user data. If the SD card is pre-installed, the system mounts the SD card automatically. The steps to write files on the SD card are as follows:
+
+<Steps>
+1. Find the SD card at the following address:
+    ```bash title="SD Card"
+    root@neuralplex:~# ls /
+    root@neuralplex:~# sdcard
+    ```
+2. Enable the read/write mode. This have been covered in the File System section.
+3. Write the files to the SD card as per the requirement.
+4. Enter the sync command to complete the writing process.
+</Steps>
+
+### SIM Card and eSIM
+TODO
+
+### GMSL Cameras
+The NeuralPlex has eight GMSL2 camera inputs that can be viewed all together, making it feasible to use for multiple views at once.  The streams can be recorded, and the video can be saved to the flash.
+
+```bash title="Show camara on screen"
+root@neuralplex:~# gst-launch-1.0 v4l2src device=/dev/video3 ! autovideosink
+```
+
+### Ethernet Cameras
+The NeuralPlex supports an ethernet camera with H.264 video compression. To view the video stream, use the GStreamer pipeline. However, before launching the pipeline, ensure the camera sends the UDP/RTP stream and that it is connected to the NeuralPlex. For detailed information and C++ implementation, refer to the CameraItem module of the Reference App.
+
+To view the video stream via GStreamer pipeline, use the following commands:
+```bash title="Ethernet Camera"
+root@neuralplex:~# gst-launch-1.0 -v udpsrc port=5014 \
+caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, \
+payload=(int)96" ! rtpjitterbuffer ! rtph264depay ! h264parse \
+! imxvpudec ! videoconvert ! imxg2dvideosink
+```
+
+Note: Some camera models use different protocols, so you have to adapt the pipeline accordingly.
+
+### USB
+The NeuralPlex comes with two USB 3.0 host ports that interface various devices, such as Flash drives, keyboards, mice, USB Cameras, USB WiFi/BT adapters, etc.  When the USB connects, the system mounts the USB storage automatically. The steps to write files on USB storage are as follows:
+
+<Steps>
+1. Find the USB storage at the following address:
+    ```bash title="USB Storage"
+    root@neuralplex:~# ls /run/media/
+    root@neuralplex:~# sda1
+    ```
+2. Enable the read/write mode. This have been covered in the File System section.
+3. Write the files to the USB storage as per the requirement.
+4. Enter the sync command to complete the writing process.
+</Steps>

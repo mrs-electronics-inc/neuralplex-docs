@@ -1,0 +1,22 @@
+---
+title: Boot Mode
+sidebar:
+  order: 9
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+The NeuralPlex offers two different boot modes.  Normal Mode and Recovery Mode.  Recovery mode is a minimal image meant to allow major in-field updates to the rootfs or bootloader partitions of the flash.  Recovery Mode allows you to reflash the entire rootfs partition, resize, or reconfigure the parition.
+
+### Changing Boot Mode
+Booting into Recovery Mode can be achieved by setting a u-boot environment variable:
+```bash title="Change Boot Mode"
+root@neuralplex:~# fw_setenv bootmode recovery
+root@neuralplex:~# reboot
+```
+
+<Aside type="danger">
+    Some configurations such as network configs may be different in Recovery Mode.  Before rebooting into Recovery Mode make sure that you have a method of gaining access to the console in Recovery Mode.
+</Aside>
+
+If you wish to change any configurations before booting into Recovery Mode, the rootfs for this paration is mounted at: `/diag`.
