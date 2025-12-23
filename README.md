@@ -6,7 +6,6 @@ This project is hosted at https://neuralplex.dev
 
 - [ ] Add webmanifest
 - [ ] Verify that deployment is successful
-- [ ] Enable "Enforce HTTPS" in the GitHub pages settings (it does not seem you can do it until you have a deployment)
 
 ## Project Structure
 

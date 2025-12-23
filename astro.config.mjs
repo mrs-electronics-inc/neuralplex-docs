@@ -6,9 +6,6 @@ import { targetBlank } from "./src/plugins/targetBlank";
 // https://astro.build/config
 export default defineConfig({
 	site: "https://neuralplex.dev",
-	base: "/",
-	outDir: "public",
-	publicDir: "static",
 	markdown: {
 		rehypePlugins: [[targetBlank, {}]],
 	},
