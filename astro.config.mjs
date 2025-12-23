@@ -1,24 +1,63 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { targetBlank } from "./src/plugins/targetBlank";
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://replace-me.mrs-electronics.dev",
+	site: "https://neuralplex.dev",
+	base: "/",
+	outDir: "public",
+	publicDir: "static",
+	markdown: {
+		rehypePlugins: [[targetBlank, {}]],
+	},
 	integrations: [
 		starlight({
-			plugins: [],
-			title: 'Docs Template',
-			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/mrs-electronics-inc' },
-				{ icon: 'gitlab', label: 'GitLab', href: 'https://gitlab.com/mrs-electronics' },
+			title: 'NeuralPlex Docs',
+			logo: {
+				src: './src/assets/MRS_Logo.png',
+			},
+			social: [{ icon: 'gitlab', label: 'GitLab', href: 'https://gitlab.com/mrs-neuralplex' }],
+			customCss: [
+				'./src/styles/custom.css',
 			],
 			sidebar: [
 				{
-					label: "Getting Started",
-					autogenerate: { directory: "getting-started" },
+					label: 'General Information & Safety',
+					autogenerate: { directory: "general" },
+				},
+				{
+					label: 'Getting Started',
+					autogenerate: { directory: 'getting-started' },
+				},
+				{
+					label: 'Hardware',
+					autogenerate: { directory: 'hardware' },
+				},
+				{
+					label: 'Qt Programming',
+					autogenerate: { directory: 'qt' },
+				},
+				{
+					label: 'Operating System',
+					autogenerate: { directory: 'operating-system' },
+				},
+				{
+					label: 'Yocto',
+					autogenerate: { directory: 'yocto' },
+				},
+				{
+					label: 'Other',
+					autogenerate: { directory: 'other' },
 				},
 			],
+			favicon: "/favicon.ico",
 		}),
 	],
+	image: {
+		// This avoids Sharp, which seems to not always work. Haven't noticed any sort of decrease in performance.
+		// It was also removed from the package.json for one less dependency.
+		service: passthroughImageService(), 
+	},
 });
