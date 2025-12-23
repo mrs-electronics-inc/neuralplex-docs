@@ -2,11 +2,6 @@
 
 This project is hosted at https://neuralplex.dev
 
-## To Do
-
-- [ ] Add webmanifest
-- [ ] Verify that deployment is successful
-
 ## Project Structure
 
 Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
