@@ -71,3 +71,46 @@ arecord -D plughw:0,1 -r 48000 -f S32_LE sample.wav -c4
 # Play Audio
 aplay Sultans_Of_Swing.wav
 ```
+
+### Audio Routing
+The NeuralPlex has two amplified speaker outputs for connecting directly to two speakers for stereo audio.  These two channels are connected to outputs 7 and 8 on the audio codec.  When trying to play an audio file in Qt, this typically defaults to channels 1 and 2.  Audio routing enables Qt to play audio on channels 1 and 2, and ALSA knows to re-route the audio to channels 7 and 8 in the backend.  To adjust audio routing, edit the `/etc/asound.conf` and add entries for `ttable`.  As shown below, (index zero-based) channel 0 is re-routed to channel 6 and volume is set to 25%, and channel 1 is re-routed to channel 7 and volume is set to 25%.
+```bash title="/etc/asound.conf"
+pcm.!default {
+        type asym
+        playback.pcm {
+                type plug
+                slave {
+                        pcm "hw:PCM3168A,1"
+                        rate 48000
+                        format S24_LE
+                        channels 8
+                }
+                ttable.0.6 = 0.25
+                ttable.1.7 = 0.25
+        }
+        capture.pcm {
+                type plug
+                slave {
+                        pcm "hw:PCM3168A,0"
+                        rate 48000
+                        format S32_LE
+                        channels 6
+                }
+        }
+}
+
+pcm.!hdmi {
+        type plug
+        slave {
+                pcm "hw:imxaudiohdmitx,0"
+                rate 48000
+                format S32_LE
+                channels 2
+        }
+}
+
+ctl.!default {
+        type hw
+        card PCM3168A
+}
+```
