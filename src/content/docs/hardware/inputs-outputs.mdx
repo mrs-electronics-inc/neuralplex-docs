@@ -38,6 +38,14 @@ The NeuralPlex has a separate Vehicle Interface Processor (VIP) that is responsi
 ### Messages
 Individual messages are outlined in the protocol below.  The ID represents the OP Code, Byte 0 represents MSB. Message with ID of `0x1XY` represents the response message sent back to the SOC (master) one frame after receiving `0xXY`.  A full frame of 0's serves as a NOP to allow the SOC to receive a response without sending more data to the VIP. Response to NOP will also be a frame consisting entirely of 0's.
 
+```bash title="spidev_test"
+# Enable PWM 1 (opcode=0x20, channel=0x01)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x20\x01\x00\x00\x00"n
+
+# Enable PWM 1 and 3 (opcode=0x20, channel=0x05)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x20\x05\x00\x00\x00"n
+```
+
 ### SPI Protocol
 
 ```bash title="SPI_Protocol.sym"
