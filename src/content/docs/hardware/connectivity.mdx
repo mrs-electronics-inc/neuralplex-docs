@@ -52,17 +52,35 @@ In some configurations, the NeuralPlex comes equipped with Bluetooth 5 and the B
 ### 1000Base-TX (Gigabit Ethernet)
 The NeuralPlex has one Gigabit Ethernet interface that allows connection to the LAN network.  The Ethernet interface can be configured in either DHCP client or DHCP server mode. By default, it's configured as a DHCP client.
 
-To configure the ethernet, use the following terminal commands:
-```bash title="Ethernet Configuration"
-# For help and possible modes
-root@neuralplex:~# eth-conf.sh -h 
+#### DHCP Server Mode
+To set the Ethernet interface in the DHCP Server mode, follow the steps below:
 
-# configuring as DHCP server 
-root@neuralplex:~# eth-conf.sh -s
+<Steps>
+1. Edit the configuration file for the DHCP Server mode:
+    ```bash
+    root@neuralplex:~# vi /etc/NetworkManager/system-connections/eth-server.nmconnection
+    ```
+2. Enter the following terminal commands to enable the server mode:
+    ```bash
+    root@neuralplex:~# nmcli con down eth-client
+    root@neuralplex:~# nmcli con up eth-server
+    ```
+</Steps>
 
-# configuring as DHCP client 
-root@neuralplex:~# eth-conf.sh -c
-```
+#### DHCP Client Mode
+To set the Ethernet interface in the DHCP Client mode, follow the steps below:
+
+<Steps>
+1. Edit the configuration file for the DHCP Client mode:
+    ```bash
+    root@neuralplex:~# vi /etc/NetworkManager/system-connections/eth-client.nmconnection
+    ```
+2. Enter the following terminal commands to enable the client mode:
+    ```bash
+    root@neuralplex:~# nmcli con down eth-server
+    root@neuralplex:~# nmcli con up eth-client
+    ```
+</Steps>
 
 ### 100BASE-T1 (Automotive Ethernet)
 TODO

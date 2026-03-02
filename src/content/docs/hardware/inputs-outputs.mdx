@@ -4,54 +4,113 @@ sidebar:
   order: 1
 ---
 
-The NeuralPlex has a separate Vehicle Interface Processor (VIP) that is responsible for all analog inputs, PWM outputs, VRef, RS232/485, and LIN.  It also shares three of the four CAN buses with the SOC, allowing it to send/recieve CAN messages during the early boot process.  The VIP interfaces with the SOC via a high speed SPI bus, and is used by the SOC to configure the baud rate of each CAN bus to ensure the VIP and SOC do not have conflicting baud rates.  The SPI bus is configured as show below.
+The NeuralPlex has a separate Vehicle Interface Processor (VIP) that is responsible for all analog inputs, PWM outputs, VRef, RS232/485, and LIN.  It also shares three of the four CAN buses with the SOC, allowing it to send/receive CAN messages during the early boot process.  The VIP interfaces with the SOC via a high speed SPI bus, and is used by the SOC to configure the baud rate of each CAN bus to ensure the VIP and SOC do not have conflicting baud rates.  
 
-### Bus Settings
+### VIP
+Included in the rootfs, there is a helper utility to assist in writing SPI commands to the VIP.  It can be access via the `vip` command:
+
+```bash title="vip"
+Usage: vip <command> [arguments...]
+
+Supported commands:
+
+  nop                                   # No operation
+  ain-read      <channel>               # 0-15
+  pwm-enable    <channels>              # bitmask 0x01-0x0F
+  pwm-config    <channels> <param> <value>
+                                        # bitmask 0x01-0x0F
+                                        # param: 0=freq, 1=duty
+                                        # value: 0-16777215
+  vref-enable   <0|1>                   # 0=disable, 1=enable
+  vref-config   <millivolts>            # 0-65535 mV
+  can-enable    <channel>               # 0-3
+  can-baud      <channel> <baudrate>    # baudrate in bit/s (decimal)
+  can-timeout   <channel> <seconds>     # timeout in seconds (decimal)
+  rs232-stream  <u32-data>
+  rs232-config  <baud_idx> <rs485> <bits> <parity> <stop>
+  data-ready
+  data-recv
+  keep-alive    <0|1>                   # 0=disable, 1=enable
+  imx-shutdown  <seconds>               # 0 = immediate
+  imx-reboot
+  s32k-reset                            # Reset S32K1 MCU
+
+Examples:
+  vip ain-read 3              # Read AIN Channel 3
+  vip pwm-config 15 1 250     # 50% duty, all 4 channels
+  vip vref-config 3300        # 3.3V on VREF
+  vip can-baud 1 500000       # CAN1 500k
+  vip imx-shutdown 15         # Shutdown IMX in 15 seconds
+```
+
+### SPI Bus
+You may also manually send SPI commands by using the framework shown below:
+
+#### SPI Bus Settings
 - MSB first
 - SCLK active high
 - CS active low
 - Data capture on 1st edge, shift (transmit) on 2nd
 - 100kHz clock speed
 
-### Frame Structure
+#### SPI Frame Structure
 | OP Code | Data Packet |
 | ------- |-------------|
 | 1 Byte  |   4 Bytes   |
 |MSB\<--- | --->LSB     |
 
-### OP Codes
+#### OP Codes
 ```bash title="OP Codes"
-SPI_NOP					      0x00
-ANALOG_INPUT_READ		  0x10
-PWM_ENABLE				    0x20
-PWM_CONFIG				    0x21
-VREF_ENABLE				    0x30
-VREF_CONFIG				    0x31
-CAN_ENABLE				    0x40
-CAN_BAUD_RATE_CONFIG	0x41
-CAN_TIMEOUT				    0x42
-RS232_STREAM			    0x50
-RS232_CONFIG			    0x51
-DATA_READY_ENCODE		  0x60
-DATA_RECEIVE			    0x61
-IMX_KEEP_ALIVE			  0x70
-IMX_SHUTDOWN			    0x71
-IMX_REBOOT				    0x72
-S32K_RESET				    0x73
+0x00 - SPI_NOP
+0x10 - ANALOG_INPUT_READ
+0x20 - PWM_ENABLE
+0x21 - PWM_CONFIG
+0x30 - VREF_ENABLE
+0x31 - VREF_CONFIG
+0x40 - CAN_ENABLE
+0x41 - CAN_BAUD_RATE_CONFIG
+0x42 - CAN_TIMEOUT
+0x50 - RS232_STREAM
+0x51 - RS232_CONFIG
+0x60 - DATA_READY_ENCODE
+0x61 - DATA_RECEIVE
+0x70 - IMX_KEEP_ALIVE
+0x71 - IMX_SHUTDOWN
+0x72 - IMX_REBOOT
+0x73 - S32K_RESET
 ```
 
-### Messages
+#### Messages
 Individual messages are outlined in the protocol below.  The ID represents the OP Code, Byte 0 represents MSB. Message with ID of `0x1XY` represents the response message sent back to the SOC (master) one frame after receiving `0xXY`.  A full frame of 0's serves as a NOP to allow the SOC to receive a response without sending more data to the VIP. Response to NOP will also be a frame consisting entirely of 0's.
 
-```bash title="spidev_test"
+```bash title="spidev Examples"
+# Read analog input (opcode=0x10, channel=0x01)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x10\x01\x00\x00\x00"
+# Send NOP command to read the result
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x00\x00\x00\x00\x00"
+
 # Enable PWM 1 (opcode=0x20, channel=0x01)
 $ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x20\x01\x00\x00\x00"
 
-# Enable PWM 1 and 3 (opcode=0x20, channel=0x05)
-$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x20\x05\x00\x00\x00"
+# Enable PWM 1, 2, 3, and 4 (opcode=0x20, channel=0x0F)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x20\x0F\x00\x00\x00"
+
+# Configure VREF to 10000mV (opcode=0x31, voltage=0x2710)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x31\x27\x10\x00\x00"
+# Enable VREF (opcode=0x30, enable=0x01)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x30\x01\x00\x00\x00"
+
+# Configure S32K CAN Baud Rate to 500K (opcode=0x41, channel=0x01, baudrate=0x07A120)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x41\x01\x17\xA1\x20"
+
+# Keep IMX alive when IGN goes low (opcode=0x70, enable=0x01)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x70\x01\x00\x00\x00"
+
+# Shutdown IMX in 10 seconds (opcode=0x71, enable=0x01, seconds=0x0A)
+$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x70\x01\x0A\x00\x00"
 ```
 
-### SPI Protocol
+#### SPI Protocol
 
 ```bash title="SPI_Protocol.sym"
 FormatVersion=5.0 // Do not edit this line!
@@ -70,11 +129,11 @@ ID=000h
 
 [ANALOG_INPUT_READ]
 ID=010h
-Var=ADC_CHANNEL unsigned 0,4 /max:1
+Var=ADC_CHANNEL unsigned 0,4
 
 [ANALOG_INPUT_CONFIG]
 ID=011h
-Var=RESOLUTION unsigned 0,2 /max:1 /e:ADC_RESOLUTION
+Var=RESOLUTION unsigned 0,2 /e:ADC_RESOLUTION
 
 [PWM_ENABLE]
 ID=020h
@@ -82,9 +141,9 @@ Var=CHANNELS unsigned 0,4
 
 [PWM_CONFIG]
 ID=021h
-Var=PWM_PARAMTER unsigned 4,2 /e:PWM_PARAMETER
-Var=VALUE unsigned 8,24 -m
 Var=CHANNELS unsigned 0,4
+Var=PWM_PARAMTER unsigned 4,2 /e:PWM_PARAMETER
+Var=VALUE unsigned 8,24
 
 [VREF_ENABLE]
 ID=030h
@@ -92,7 +151,7 @@ Var=ENABLE unsigned 0,1
 
 [VREF_CONFIG]
 ID=031h
-Var=VALUE unsigned 0,16 -m
+Var=VALUE unsigned 0,16
 
 [CAN_ENABLE]
 ID=040h
@@ -100,24 +159,24 @@ Var=CAN_CHANNEL unsigned 0,4
 
 [CAN_BAUD_RATE_CONFIG]
 ID=041h
-Var=CAN_CHANNEL unsigned 0,4 /max:1
-Var=VALUE unsigned 8,24 -m /max:1
+Var=CAN_CHANNEL unsigned 0,4
+Var=VALUE unsigned 8,24
 
 [CAN_TIMEOUT]
 ID=042h
-Var=CAN_TIMEOUT_S unsigned 8,16 /u:s
 Var=CAN_CHANNEL unsigned 0,4
+Var=CAN_TIMEOUT_S unsigned 8,16 /u:s
 
 [RS232_STREAM]
 ID=050h
-Var=TX unsigned 0,32 -m /max:1
+Var=TX unsigned 0,32
 
 [RS232_CONFIG]
 ID=051h
-Var=BAUD_RATE unsigned 0,5 /max:1
+Var=BAUD_RATE unsigned 0,5
 Var=RS485_FLAG unsigned 7,1
-Var=BITS_PER_CHAR unsigned 8,4 /max:1
-Var=PARITY unsigned 12,3 /max:1 /e:PARITY
+Var=BITS_PER_CHAR unsigned 8,4
+Var=PARITY unsigned 12,3 /e:PARITY
 Var=STOP_BITS unsigned 15,1
 
 [DATA_READY_DECODE]
@@ -150,10 +209,10 @@ Var=BYTES unsigned 8,8
 
 [ANALOG_INPUT_READ_Response]
 ID=110h
-Var=ADC_CHANNEL unsigned 0,4 /max:1
-Var=VALUE unsigned 8,16 -m /max:1
+Var=ADC_CHANNEL unsigned 0,4
+Var=VALUE unsigned 8,16
 
 [DATA_RECEIVE_Response]
 ID=161h
-Var=DATA unsigned 0,32 -m
+Var=DATA unsigned 0,32
 ```
