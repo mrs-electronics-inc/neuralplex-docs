@@ -79,9 +79,10 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 </Steps>
 
 
-### Flash eMMC
+### Flash entire eMMC
 <Steps>
-1. Set DIP switch to Serial Download
+1. Set DIP switch to Serial Download (1=off, 2=on, 3=off, 4=off)
+![](../../../assets/boot-mode-serial-download.jpg)
 2. Apply 12V to KL30 and IGN pins
 3. Unzip the wic.gz file from the Yocto build:
     - Command: `gunzip neuralplex-image-imx8qm-np-rootfs.wic.gz`
@@ -91,7 +92,9 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 ### Flash rootfs only
 <Steps>
-1. Apply 12V to KL30 and IGN.  Pause u-boot as the board begins to boot
-2. Mount eMMC as USB drive: `ums 0 mmc 0`
-3. Flash the rootfs: `dd if=neuralplex-image-imx8qm-np-rootfs.wic of=/dev/sda bs=4M status=progress`
+1. Set SOM DIP switch to eMMC (1=off, 2=off, 3=on, 4=off)
+![](../../../assets/boot-mode-emmc.jpg)
+2. Apply 12V to KL30 and IGN.  Pause u-boot as the board begins to boot
+3. Mount eMMC as USB drive: `ums 0 mmc 0`
+4. Flash the rootfs: `dd if=neuralplex-image-imx8qm-np-rootfs.wic of=/dev/sda bs=4M status=progress`
 </Steps>
