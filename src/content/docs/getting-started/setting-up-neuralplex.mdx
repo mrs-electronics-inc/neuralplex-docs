@@ -117,3 +117,26 @@ root@neuralplex:~# cd /rw_data
 <Aside type="tip">
 After writing files to the read/write partition, ensure to issue the **sync** command to complete the process of writing to the partition.
 </Aside>
+
+### Device Tree Overlays
+To allow users to load and initialize only the perpheals that are needed, Device Tree Overlays (DTOs) are used.  DTOs enable hardware customization without the need to modify the base device tree. This flexibility is especially valuable since NeuralPlex supports multiple configurations.  However, once it has been determined what features are required for your application, it may be beneficial to bake everything into a single device tree, which will speed up the boot process a bit.
+
+To enable a device tree overlay, edit the `/boot/overlays.txt` file and append the name of the DTO to the `overlay_files=`.  DTOs must be space delimited; do not add commas or try to enter the DTOs on new lines.
+
+```bash title="/boot/overlays.txt"
+overlay_files=imx8qm-np-audio.dtbo imx8qm-np-wifi.dtbo
+```
+
+List of available DTOs:
+* imx8qm-np-audio.dtbo
+* imx8qm-np-cameras.dtbo
+* imx8qm-np-cellular-gps.dtbo
+* imx8qm-np-hdmi.dtbo
+* imx8qm-np-pci.dtbo
+* imx8qm-np-sata.dtbo
+* imx8qm-np-video0-12-3.dtbo
+* imx8qm-np-video1-12-3.dtbo
+* imx8qm-np-video2-12-3.dtbo
+* imx8qm-np-video3-12-3.dtbo
+* imx8qm-np-video2-15-6.dtbo
+* imx8qm-np-wifi.dtbo
