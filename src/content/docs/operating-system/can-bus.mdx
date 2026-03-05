@@ -32,8 +32,8 @@ root@neuralplex:~# systemctl restart systemd-networkd
 If you have changed the baud rate on CAN0, CAN1, or CAN2, you will need to also update the baud rate on the VIP since these three CAN busses are shared.
 
 ```bash title="Update VIP CAN Baud Rate"
-# Configure S32K CAN Baud Rate to 500K (opcode=0x41, channel=0x01, baudrate=0x07A120)
-$ spidev_test -D /dev/spidev0.1 -O -s 100000 -v -S 5 -p "\x41\x01\x17\xA1\x20"
+# Configure S32K CAN 0 Baud Rate to 500K
+$ vip can-baud 0 500000
 ```
 
 ### can-utils
