@@ -144,7 +144,7 @@ The following sections have examples of how to use the NeuralPlex as a Bluetooth
 1. Make the Board Discoverable and Pairable:
 
     Enter `bluetoothctl`:
-    ```bash title="bluetoothctl"
+    ```bash
     root@neuralplex:~# bluetoothctl
     ```
 
@@ -171,7 +171,16 @@ The following sections have examples of how to use the NeuralPlex as a Bluetooth
     Exit `bluetoothctl` with `exit` or `Ctrl+D`.
 4. Play Audio
 
-    Before you can play audio from your phone, you will need to enable 
+    Before you can play audio from your phone, you will need to ensure that the `bluealsa-aplay` service is running:
+    ```bash title="Enable Bluetooth Audio"
+    # Check the status of the blueasla-aplay service
+    root@neuralplex:~# systemctl status bluealsa-aplay
+
+    # If it's not running, enable and start it:
+    root@neuralplex:~# systemctl enable bluealsa-aplay
+    root@neuralplex:~# systemctl start bluealsa-aplay
+    ```
+
     Play an audio file on your phone, and will be streamed to the `bt-sink` profile in ALSA. 
 </Steps>
 
