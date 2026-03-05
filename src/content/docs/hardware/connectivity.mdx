@@ -50,12 +50,12 @@ Numerous settings can be configured in the config files.  For a full datasheet o
 In some configurations, the NeuralPlex comes equipped with a Bluetooth 5 module and the BlueZ software.  This section describes directly configuring bluez via the `bluetoothctl` command line tool.
 The exact procedure depends on the devices involved and their input functionality. What follows is a general outline of pairing a device using bluetoothctl.
 
-Start the `bluetoothctl` interactive command. Input help to get a list of available commands.
+Start the `bluetoothctl` interactive command. Input `help` to get a list of available commands.
 
 <Steps>
-1. (Optional) Enter power on to turn the power to the controller on if the device is set to off. It is on by default
+1. (Optional) Enter `power on` to turn the power to the controller on if the device is set to off. It is on by default.
 2. Enter device discovery mode with `scan on` command if device is not yet on the list.
-3. Enter `pair MAC_ADDR` to do the pairing (tab completion works).
+3. Enter `pair MAC_ADDR` to do the pairing (replace `MAC_ADDR` with the device's MAC address - tab completion works).
 4. If using a device without a PIN, one may need to manually trust the device before it can reconnect successfully. Enter `trust MAC_ADDR` to do so.
 5. Enter `connect MAC_ADDR` to establish a connection.
 
