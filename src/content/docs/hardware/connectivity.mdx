@@ -47,7 +47,47 @@ Numerous settings can be configured in the config files.  For a full datasheet o
 </Aside>
 
 ### Bluetooth
-In some configurations, the NeuralPlex comes equipped with Bluetooth 5 and the BlueZ software.  The Bluetooth can be controlled via C++ code and from the terminal.
+In some configurations, the NeuralPlex comes equipped with a Bluetooth 5 module and the BlueZ software.  This section describes directly configuring bluez via the `bluetoothctl` command line tool.
+The exact procedure depends on the devices involved and their input functionality. What follows is a general outline of pairing a device using bluetoothctl.
+
+Start the `bluetoothctl` interactive command. Input help to get a list of available commands.
+
+<Steps>
+1. (Optional) Enter power on to turn the power to the controller on if the device is set to off. It is on by default
+2. Enter device discovery mode with `scan on` command if device is not yet on the list.
+3. Enter `pair MAC_ADDR` to do the pairing (tab completion works).
+4. If using a device without a PIN, one may need to manually trust the device before it can reconnect successfully. Enter `trust MAC_ADDR` to do so.
+5. Enter `connect MAC_ADDR` to establish a connection.
+
+    An example session may look like this:
+    ```bash title="bluetoothctl"
+    [bluetooth]# power on
+    Changing power on succeeded
+    [CHG] Controller 00:10:20:30:40:50 Powered: yes
+
+    [bluetooth]# scan on
+    Discovery started
+    [CHG] Controller 00:10:20:30:40:50 Discovering: yes
+    [NEW] Device 00:12:34:56:78:90 device name
+    [CHG] Device 00:12:34:56:78:90 LegacyPairing: yes
+
+    [bluetooth]# pair 00:12:34:56:78:90
+    Attempting to pair with 00:12:34:56:78:90
+    [CHG] Device 00:12:34:56:78:90 Connected: yes
+    [CHG] Device 00:12:34:56:78:90 Connected: no
+    [CHG] Device 00:12:34:56:78:90 Connected: yes
+    Request PIN code
+    [agent] Enter PIN code: 1234
+    [CHG] Device 00:12:34:56:78:90 Paired: yes
+    Pairing successful
+    [CHG] Device 00:12:34:56:78:90 Connected: no
+
+    [bluetooth]# connect 00:12:34:56:78:90
+    Attempting to connect to 00:12:34:56:78:90
+    [CHG] Device 00:12:34:56:78:90 Connected: yes
+    Connection successful
+    ```
+</Steps>
 
 ### 1000Base-TX (Gigabit Ethernet)
 The NeuralPlex has one Gigabit Ethernet interface that allows connection to the LAN network.  The Ethernet interface can be configured in either DHCP client or DHCP server mode. By default, it's configured as a DHCP client.
