@@ -6,7 +6,7 @@ sidebar:
 import { Steps, Aside } from '@astrojs/starlight/components';
 
 ### WiFi
-In some configurations, the NeuralPlex comes equipped with an 802.11b/g/n module that can be set up as an Access Point (AP) or a client.  By default, the Wi-Fi module is set up as an AP, broadcasting the SSID: NeuralPlex-xxx with a passphrase: 12345678.
+In some configurations, the NeuralPlex comes equipped with an 802.11b/g/n module that can be set up as an Access Point (AP) or a client.  To enable the WiFi module, you must append the `imx8qm-np-wifi.dtbo` device tree overlay to the `/boot/overlays.txt` file.  Once appended, reboot the system and the module will be enumerated on the USB bus and will create a `wlan` interface.  By default, the Wi-Fi module is set up as an AP, broadcasting the SSID: NeuralPlex-xxx with a passphrase: 12345678.
 
 #### Access Point Mode
 To set the Wi-Fi in the Access Point (AP) mode, follow the steps below:
@@ -126,6 +126,91 @@ To set the Ethernet interface in the DHCP Client mode, follow the steps below:
 TODO
 
 ### Cellular
-```bash
-root@neuralplex:~# screen /dev/ttyUSB0
+In some configurations, the NeuralPlex comes equipped with a LTE modem to support cellular connectivity.  To enable the LTE modem, you must append the `imx8qm-np-cellular-gps.dtbo` device tree overlay to the `/boot/overlays.txt` file.  Once appended, reboot the system and the modem will be enumerated on the USB bus and will create multiple `/dev/ttyUSBx` interfaces.  `ModemManager` will detect the modem and automatically try to activate the connection with the network provider of the SIM card.  Once activated, `NetworkManager` will take care of enabling the network interface, as configured in `/etc/NetworkManager/system-connections/lte.nmconnection`.
+
+```bash title=ModemManager
+# List the available modems
+root@neuralplex:~# mmcli -L
+    /org/freedesktop/ModemManager1/Modem/0 [QUALCOMM INCORPORATED] SIMCOM_SIM7600G-H
+
+# Show the status of the modem (check the index of your modem)
+root@neuralplex:~# mmcli -m 0
+  -----------------------------------
+  General  |                    path: /org/freedesktop/ModemManager1/Modem/0
+           |               device id: 1b85181f74c0b9fcb780b3af58e4e540926bf1f1
+  -----------------------------------
+  Hardware |            manufacturer: QUALCOMM INCORPORATED
+           |                   model: SIMCOM_SIM7600G-H
+           |       firmware revision: LE20B04SIM7600G22
+           |          carrier config: VoLTE-ATT
+           | carrier config revision: 05010334
+           |            h/w revision: 10000
+           |               supported: gsm-umts, lte
+           |                 current: gsm-umts, lte
+           |            equipment id: 862636055528671
+  -----------------------------------
+  System   |                  device: /sys/devices/platform/bus@5b000000/5b110000.usb/5b130000.usb/xhci-hcd.1.auto/usb1/1-1/1-1.4
+           |                 physdev: /sys/devices/platform/bus@5b000000/5b110000.usb/5b130000.usb/xhci-hcd.1.auto/usb1/1-1/1-1.4
+           |                 drivers: qmi_wwan, option
+           |                  plugin: simtech
+           |            primary port: cdc-wdm0
+           |                   ports: cdc-wdm0 (qmi), ttyUSB0 (ignored), ttyUSB1 (gps), 
+           |                          ttyUSB4 (audio), wwan0 (net)
+  -----------------------------------
+  Status   |                   state: failed
+           |           failed reason: sim-missing
+           |             power state: on
+  -----------------------------------
+  Modes    |               supported: allowed: 2g; preferred: none
+           |                          allowed: 3g; preferred: none
+           |                          allowed: 4g; preferred: none
+           |                          allowed: 2g, 3g; preferred: 3g
+           |                          allowed: 2g, 3g; preferred: 2g
+           |                          allowed: 2g, 4g; preferred: 4g
+           |                          allowed: 2g, 4g; preferred: 2g
+           |                          allowed: 3g, 4g; preferred: 4g
+           |                          allowed: 3g, 4g; preferred: 3g
+           |                          allowed: 2g, 3g, 4g; preferred: 4g
+           |                          allowed: 2g, 3g, 4g; preferred: 3g
+           |                          allowed: 2g, 3g, 4g; preferred: 2g
+           |                 current: allowed: 2g, 3g, 4g; preferred: 4g
+  -----------------------------------
+  Bands    |               supported: egsm, dcs, pcs, g850, utran-1, utran-4, utran-6, utran-5, 
+           |                          utran-8, utran-2, eutran-1, eutran-2, eutran-3, eutran-4, eutran-5, 
+           |                          eutran-7, eutran-8, eutran-12, eutran-13, eutran-18, eutran-19, 
+           |                          eutran-20, eutran-25, eutran-26, eutran-28, eutran-34, eutran-38, 
+           |                          eutran-39, eutran-40, eutran-41, eutran-66, utran-19
+           |                 current: egsm, dcs, pcs, g850, utran-1, utran-4, utran-6, utran-5, 
+           |                          utran-8, utran-2, eutran-1, eutran-2, eutran-3, eutran-4, eutran-5, 
+           |                          eutran-7, eutran-8, eutran-12, eutran-13, eutran-18, eutran-19, 
+           |                          eutran-20, eutran-25, eutran-26, eutran-28, eutran-34, eutran-38, 
+           |                          eutran-39, eutran-40, eutran-41, eutran-66, utran-19
+  -----------------------------------
+  IP       |               supported: ipv4, ipv6, ipv4v6
+  -----------------------------------
+  3GPP     |                    imei: 862636055528671
+  -----------------------------------
+  SIM      |          sim slot paths: slot 1: none (active)
+           |                          slot 2: none
+```
+
+To set the APN of your netowrk provider, you can edit the `/etc/NetworkManager/system-connections/lte.nmconnection` file and enter you APN here.  However, some modems ignore this section and require you to manually set the APN via `AT` commands.
+```bash title="AT Commands"
+# Open the AT port of the modem (ModemManager specifies which port is for AT)
+root@neuralplex:~# screen /dev/ttyUSB2
+
+# Print the modem model number
+> ATI
+
+# Set the APN
+> AT+CGDCONT=1, "IPV4V6", "your-apn-here"
+```
+
+Once the APN has been set, `ModemManager` will report if the modem is registered on the network and also provide the signal strength.  To test for internet connectivity, execute the `ping` command while specifying the network interface:
+```bash title="Check Internet Connectivity"
+# List all network interfaces
+root@neuralplex:~# ifconfig
+
+# Ping Google's server from the modem interface
+root@neuralplex:~# ping -I wwan0 google.com
 ```

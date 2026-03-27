@@ -7,24 +7,39 @@ sidebar:
 The NeuralPlex is equipped with several embedded devices, which add multiple functionalities. This section describes each of those embedded devices.
 
 ### GNSS
-The NeuralPlex can have a GNSS receiver to support concurrent reception of up to 3 GNSS (GPS, Galileo, GLONASS, BeiDou). The GNSS receiver provides the location using NMEA data (UART interface on the NeuralPlex) available on the path: /dev/ttyLP1.
+The NeuralPlex can have a GNSS receiver to support concurrent reception of up to 3 GNSS (GPS, Galileo, GLONASS, BeiDou). The GNSS receiver provides the location using NMEA data (UART interface on the NeuralPlex) available on the path: /dev/ttyLP1.  To enable the GNSS reciever, you must append the `imx8qm-np-cellular-gps.dtbo` device tree overlay to the `/boot/overlays.txt` file.  Once appended, reboot the system and execute the following commands below:
 
 ```bash title="View output from GNSS Receiver"
 root@neuralplex:~# echo 0 > /proc/sys/kernel/sysrq
 
-# Enable GPS
-root@neuralplex:~# gpioset -c6 26=0 
+# Enable GPS (Verify the specific GPIO chip with gpioinfo)
+root@neuralplex:~# gpioset -c6 26=0
 
 # Open Screen with baud rate at 38400
 root@neuralplex:~#screen /dev/ttyLP1 38400
 ```
 
-You can also utilize the GNSS Reciver in your Qt application by using the `QtSerialPort` library:
+You can also utilize the GNSS Reciver in your Qt application by using the `QtSerialPort` and `QNmeaPositionInfoSource` library:
 
 ```cpp
-// Sensors.cpp
-gps *m_gps = new gps(m_version, &app);
-m_gps->start();
+m_serialPort = new QSerialPort();
+m_serialPort->setPortName("/dev/ttyLP1");
+
+if (m_serialPort->open(QIODevice::ReadOnly))
+{
+	qDebug() << "GNSS Serial Port opened";
+	m_serialPort->setBaudRate(QSerialPort::Baud38400);
+	m_nmeaSource = new QNmeaPositionInfoSource(QNmeaPositionInfoSource::RealTimeMode);
+	m_nmeaSource->setDevice(m_serialPort);
+	m_nmeaSource->setPreferredPositioningMethods(QNmeaPositionInfoSource::AllPositioningMethods);
+	m_nmeaSource->setUserEquivalentRangeError(5.1);
+	m_nmeaSource->setUpdateInterval(1000);
+
+	connect(m_nmeaSource, SIGNAL(positionUpdated(QGeoPositionInfo)), this, SLOT(positionUpdated(QGeoPositionInfo)));
+	connect(m_nmeaSource, SIGNAL(updateTimeout()), this, SLOT(updateTimeout()));
+	connect(m_nmeaSource, SIGNAL(error(QGeoPositionInfoSource::Error)), this, SLOT(error(QGeoPositionInfoSource::Error)));
+	m_nmeaSource->startUpdates();
+}
 ```
 
 ### AM/FM Radio Tuner
